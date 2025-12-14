@@ -373,6 +373,21 @@
         min-height: 41px;
       }
 
+      /* Resize business-news-header and business-news-subtitle for odd pages (except page 1) */
+      .page-wrapper.odd-page .business-news-header {
+        font-size: 32px;
+        line-height: 40px;
+        min-height: auto;
+        height: auto;
+      }
+
+      .page-wrapper.odd-page .business-news-subtitle {
+        font-size: 22px;
+        line-height: 30px;
+        min-height: auto;
+        height: auto;
+      }
+
       .business-news-content {
         font-size: 16px;
         line-height: 23px;
@@ -592,6 +607,10 @@
 
         .newsletter-header {
           padding: 20px 20px 0;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          position: relative;
         }
 
         .newsletter-content {
@@ -604,12 +623,20 @@
           font-size: 48px;
           line-height: 60px;
           min-height: 60px;
+          text-align: center;
         }
 
         .newsletter-title-sub {
           font-size: 28px;
           line-height: 36px;
           min-height: 36px;
+          text-align: center;
+        }
+
+        .newsletter-title-wrapper {
+          width: 100%;
+          text-align: center;
+          margin-bottom: 15px;
         }
 
         .section-title,
@@ -685,9 +712,12 @@
         }
 
         .decorative-line-horizontal {
+          position: relative;
           width: 100%;
           left: 0;
-          top: 180px;
+          top: 0;
+          margin: 15px 0;
+          transform: none;
         }
 
         .decorative-line-vertical {
@@ -698,14 +728,22 @@
           position: relative;
           top: auto;
           left: auto;
+          right: auto;
+          width: 80px;
+          height: 80px;
           margin: 0 auto 10px;
+          order: 1;
         }
 
         .newsletter-logo {
           position: relative;
           top: auto;
           left: auto;
+          right: auto;
+          width: 90px;
+          height: 90px;
           margin: 0 auto 10px;
+          order: 2;
         }
 
         .toolbar {
@@ -734,10 +772,27 @@
 
         .newsletter-header {
           padding: 15px 15px 0;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
         }
 
         .newsletter-content {
           padding: 0 15px;
+        }
+
+        .newsletter-logo-left {
+          width: 70px;
+          height: 70px;
+        }
+
+        .newsletter-logo {
+          width: 80px;
+          height: 80px;
+        }
+
+        .decorative-line-horizontal {
+          margin: 10px 0;
         }
 
         .newsletter-title-main {
@@ -1130,6 +1185,12 @@
                 pageWrapper.setAttribute('data-page-id', pageNum);
                 pageWrapper.setAttribute('data-unique-id', uniqueId);
                 pageWrapper.setAttribute('data-file-id', fileId);
+                
+                // Add 'odd-page' class for odd pages except page 1 (pages 3, 5, 7, 9, etc.)
+                if (pageNum > 1 && pageNum % 2 === 1) {
+                    pageWrapper.classList.add('odd-page');
+                }
+                
                 pageWrapper.innerHTML = `
                     <div class="page-number">Page ${pageNum}</div>
                     ${pageElement.outerHTML}
