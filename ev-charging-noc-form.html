@@ -168,7 +168,8 @@
             display: flex;
             align-items: center;
             gap: 18px;
-            min-height: 48px;
+            /* Controls vertical space per input row */
+            min-height: 29.77px;
         }
 
         .field-label {
@@ -179,7 +180,9 @@
 
         .line {
             flex: 1;
-            min-height: 40px;
+            /* Approximate “input” area size: width × height */
+            min-width: 327.77px;
+            min-height: 29.77px;
             border-bottom: 1.5px solid #334155;
         }
 
@@ -359,9 +362,19 @@
                 width: auto;
                 min-height: auto;
                 margin: 0;
-                padding: 18mm 16mm 16mm;
+                /* Further reduce top padding in print to bring header/logo closer to page top */
+                padding: 0mm 16mm 16mm;
                 border-radius: 0;
                 box-shadow: none;
+            }
+
+            /* Avoid splitting important blocks across pages */
+            .section,
+            .field-row,
+            .noc-closing,
+            .noc-signature-grid {
+                break-inside: avoid;
+                page-break-inside: avoid;
             }
 
             .print-button {
@@ -416,7 +429,21 @@
         </section>
 
         <section class="section">
-            <h3 class="section-title">1. Resident Details</h3>
+            <h3 class="section-title">1. PARKING OWNER Details</h3>
+            <div class="field-group">
+                <div class="field-row">
+                    <span class="field-label">Name:</span>
+                    <span class="line"></span>
+                </div>
+                <div class="field-row">
+                    <span class="field-label">Flat No.:</span>
+                    <span class="line"></span>
+                </div>
+            </div>
+        </section>
+
+        <section class="section">
+            <h3 class="section-title">1. VEHICLE OWNER Details</h3>
             <div class="field-group">
                 <div class="field-row">
                     <span class="field-label">Name:</span>
@@ -433,7 +460,7 @@
             <h3 class="section-title">2. Parking &amp; Vehicle Details</h3>
             <div class="field-group">
                 <div class="field-row">
-                    <span class="field-label">Allocated Covered/Basement Parking Number:</span>
+                    <span class="field-label">Parking Number:</span>
                     <span class="line"></span>
                 </div>
                 <div class="field-row">
@@ -460,7 +487,7 @@
                 </div>
             </div>
             <div class="field-row" style="margin-top: 12px;">
-                <span class="field-label">Charger  include MCB and RCB/RCBO:</span>
+                <span class="field-label">Charger include MCB and RCB/RCBO:</span>
                 <span class="line"></span>
             </div>
         </section>
@@ -473,25 +500,49 @@
                 <li>The charging point will not obstruct movement or create any safety hazards.</li>
                 <li>No structural modifications will be done without prior approval.</li>
                 <li>Any maintenance issues will be immediately reported to TAAOWA.</li>
-                <li>Energy consumption will be billed as per association policy.</li>
-                <li>Resident will follow all SOPs, rules, safety norms, and EV Charger instructions specified by TAAOWA.
-                <li>Any liability arising from a malfunction of the EV charging unit that affects other residents
-                    rests solely with the owner of the charging unit/vehicle.</li>
-                </li>
+                <li>Energy consumption will be billed as per association policy (if applicable).</li>
+                <li>Resident will follow all SOPs, rules, safety norms, and EV Charger instructions specified by
+                    TAAOWA.</li>
+                <li>TAAOWA or Facility Management (FM) may inspect the EV charging setup at any time and take necessary
+                    action, including temporary disconnection, in case of emergency, safety concerns, or violation of
+                    rules/SOP.</li>
+                <li>Any liability arising due to EV charging unit rests solely with the owner of the charging
+                    unit/vehicle.</li>
             </ul>
         </section>
 
         <section class="section">
             <h3 class="section-title">5. Ownership &amp; Resident Declaration</h3>
-            </br>
             <p class="declaration">
-                I, ________________________, take full ownership of the charger installed in my parking space and
-                confirm that the same
-                will be used only for my personal use.
+                I, ________________________, as the tenant/renter of the allocated parking space and owner of the vehicle, confirm that I have
+                obtained permission from the rightful owner for installing and using the EV charger. I agree to use the
+                charger only for personal, non-commercial purposes and to comply with all safety norms and TAAOWA’s EV
+                Charger SOP.
             </p>
             <p class="declaration">
-                I will follow all the safety norms and the instructions specified in the EV Charger SOP shared by
-                TAAOWA.
+                I hereby request approval/NOC from TAAOWA for installing the EV charging point at my rented parking
+                area. All information
+                provided is accurate to the best of my knowledge.
+            </p>
+
+            <div class="signature-grid">
+                <div class="signature-field">
+                    <span class="signature-label">Date:</span>
+                    <span class="signature-line"></span>
+                </div>
+                <div class="signature-field">
+                    <span class="signature-label">Vehicle Owner Signature:</span>
+                    <span class="signature-line"></span>
+                </div>
+            </div>
+            <br>
+            <p class="declaration">
+                I, ________________________, as the lawful owner of the allocated parking space, take full
+                responsibility for the installation of the EV charger at this location. I confirm that the charger will
+                be used
+                only for
+                personal, non-commercial purposes and that all safety norms and TAAOWA’s EV Charger SOP will be strictly
+                followed.
             </p>
             <p class="declaration">
                 I hereby request approval/NOC from TAAOWA for installing the EV charging point at my allocated parking
@@ -505,7 +556,7 @@
                     <span class="signature-line"></span>
                 </div>
                 <div class="signature-field">
-                    <span class="signature-label">Signature:</span>
+                    <span class="signature-label">Parking Owner Signature:</span>
                     <span class="signature-line"></span>
                 </div>
             </div>
@@ -552,7 +603,7 @@
                 grants you the No Objection Certificate (NOC) to proceed with the installation of the EV charging point
                 in your designated
                 parking area.
-            </p> 
+            </p>
             <div>
                 <div class="noc-section-title">Approval Conditions</div>
                 <ul class="bullet-list" style="margin-top: 0; gap: 4px; line-height: 1.35;">
@@ -563,20 +614,26 @@
                     <li>No structural modifications will be made without prior approval.</li>
                     <li>The charging unit will not obstruct movement or create safety hazards.</li>
                     <li>Any maintenance issues will be reported promptly to TAAOWA.</li>
+                    <li>TAAOWA or Facility Management (FM) reserves the right to inspect the EV charging installation
+                        and
+                        take necessary action, including temporary disconnection, in case of emergency, safety concerns,
+                        or violation of rules/SOP.</li>
                     <li>Resident takes full responsibility for the installed charger and its usage and any liabilities.
                     </li>
                 </ul>
-            </div> </br>
+            </div>
+
             <div>
                 <div class="noc-section-title">Important Note</div>
                 <p>
-                    This NOC is valid only for the EV vehicle with number ________________________ in your application and does not permit any
+                    This NOC is valid only for the EV vehicle with number ________________________ in your application
+                    and does not permit any
                     alterations without
                     further approval from the association.
                 </p>
             </div>
         </div>
-        </br>
+        <br>
         <div class="noc-closing">
             <p style="margin: 0;"><b>Warm regards,</p>
             <p style="margin: 0;">For The ACE Apartment Owners Welfare Association (TAAOWA)</b></p>

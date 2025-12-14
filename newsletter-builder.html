@@ -1,0 +1,3639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Newsletter Builder - The ACE</title>
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&amp;display=swap"
+    />
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      
+      img[src$=".png"],
+      img[src*="transperent"],
+      img[src*="transparent"] {
+        background-color: transparent !important;
+        background: transparent !important;
+      }
+
+      body {
+        font-family: 'Poppins', sans-serif;
+        background-color: #f5f5f5;
+        color: #333;
+        line-height: 1.6;
+        overflow-x: hidden;
+      }
+
+      .toolbar {
+        background: white;
+        padding: 15px 30px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+        margin-bottom: 20px;
+      }
+
+      .toolbar-title {
+        font-size: 20px;
+        font-weight: 700;
+        color: #1e3a8a;
+      }
+
+      .toolbar-actions {
+        display: flex;
+        gap: 10px;
+      }
+
+      .btn-toolbar {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 6px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-family: 'Poppins', sans-serif;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .btn-primary {
+        background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+        color: white;
+      }
+
+      .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(30, 58, 138, 0.3);
+      }
+
+      .btn-secondary {
+        background-color: #10b981;
+        color: white;
+      }
+
+      .btn-secondary:hover {
+        background-color: #059669;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+      }
+
+      .btn-outline {
+        background-color: white;
+        color: #1e3a8a;
+        border: 2px solid #1e3a8a;
+      }
+
+      .btn-outline:hover {
+        background-color: #1e3a8a;
+        color: white;
+      }
+
+      /* Loading and Saving Animations */
+      .save-spinner {
+        display: inline-block;
+        animation: spin 1s linear infinite;
+      }
+
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+
+      .btn-toolbar.saving {
+        opacity: 0.7;
+        cursor: not-allowed;
+      }
+
+      .btn-toolbar.saving .save-icon,
+      .btn-toolbar.saving .save-text {
+        display: none;
+      }
+
+      .btn-toolbar.saving .save-spinner {
+        display: inline-block !important;
+      }
+
+      /* Loading overlay */
+      .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 10000;
+        flex-direction: column;
+        gap: 20px;
+      }
+
+      .loading-spinner {
+        width: 50px;
+        height: 50px;
+        border: 4px solid rgba(255, 255, 255, 0.3);
+        border-top: 4px solid white;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+
+      .loading-text {
+        color: white;
+        font-size: 18px;
+        font-weight: 600;
+        font-family: 'Poppins', sans-serif;
+      }
+
+      .container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+
+      .editor-wrapper {
+        background: #e5e7eb;
+        padding: 40px;
+        border-radius: 8px;
+        display: flex;
+        justify-content: center;
+        min-height: calc(100vh - 200px);
+      }
+
+      .newsletter-preview {
+        width: 793.701px;
+        min-height: 1122.52px;
+        height: auto;
+        background: white;
+        color: #333;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        position: relative;
+        overflow: visible;
+        transform: scale(0.85);
+        transform-origin: top center;
+      }
+
+      .newsletter-preview[data-page-type="gallery"] {
+        overflow: visible;
+      }
+
+      .newsletter-preview::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 897.741px;
+        min-height: 1196.99px;
+        height: 100%;
+        background-image: url('https://media-public.canva.com/eQThM/MADyQweQThM/1/s2.jpg');
+        background-size: cover;
+        background-position: center;
+        opacity: 0.13;
+        z-index: 0;
+        transform: translate(-55.8512px, -39.706px);
+      }
+
+      .newsletter-preview > * {
+        position: relative;
+        z-index: 1;
+      }
+
+      .editable {
+        position: relative;
+        cursor: text;
+        outline: none;
+        transition: all 0.2s ease;
+      }
+
+      .editable:hover {
+        background-color: rgba(59, 130, 246, 0.05);
+        border-radius: 4px;
+      }
+
+      .editable:focus {
+        background-color: rgba(59, 130, 246, 0.1);
+        border-radius: 4px;
+        box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+      }
+
+      .editable-image {
+        position: relative;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+
+      .editable-image:hover {
+        opacity: 0.8;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5);
+        border-radius: 4px;
+      }
+
+      .editable-image::after {
+        content: '📷 Click to change image';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: rgba(0, 0, 0, 0.7);
+        color: white;
+        padding: 8px 12px;
+        border-radius: 4px;
+        font-size: 12px;
+        opacity: 0;
+        transition: opacity 0.2s ease;
+        pointer-events: none;
+        white-space: nowrap;
+      }
+
+      .editable-image:hover::after {
+        opacity: 1;
+      }
+
+      .image-upload-input {
+        display: none;
+      }
+
+      .newsletter-header {
+        position: relative;
+        padding: 32px 46px 0;
+      }
+
+      .newsletter-logo-left {
+        position: absolute;
+        top: 32px;
+        left: 655px;
+        width: 100px;
+        height: 100px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .newsletter-logo-left img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        background-color: transparent !important;
+        background: transparent !important;
+      }
+
+      .newsletter-logo {
+        position: absolute;
+        top: 110px;
+        left: 650px;
+        width: 110px;
+        height: 110px;
+        background-color: transparent !important;
+        background: transparent !important;
+        background-image: none !important;
+        border-radius: 4px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        color: rgba(102, 102, 102, 0);
+        text-align: center;
+        overflow: visible;
+      }
+
+      .newsletter-logo img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        background-color: transparent !important;
+        background: transparent !important;
+        background-image: none !important;
+        display: block;
+        mix-blend-mode: normal;
+        image-rendering: -webkit-optimize-contrast;
+        -webkit-background-clip: padding-box;
+        background-clip: padding-box;
+        opacity: 1;
+        filter: none;
+        border: none;
+        outline: none;
+        box-shadow: none;
+      }
+      
+      .newsletter-logo img[src*="transperent"],
+      .newsletter-logo img[src*="transparent"] {
+        background-color: transparent !important;
+        background: transparent !important;
+      }
+      
+      .newsletter-logo * {
+        background-color: transparent !important;
+        background: transparent !important;
+      }
+      
+      .newsletter-logo input[type="file"] {
+        background-color: transparent !important;
+        background: transparent !important;
+      }
+
+      .newsletter-logo:hover {
+        background-color: transparent !important;
+        background: transparent !important;
+      }
+      
+      .newsletter-logo.editable-image {
+        background-color: transparent !important;
+        background: transparent !important;
+      }
+      
+      .newsletter-logo.editable-image:hover {
+        background-color: transparent !important;
+        background: transparent !important;
+      }
+
+      .newsletter-title-wrapper {
+        margin-bottom: 20px;
+      }
+
+      .newsletter-title-main {
+        font-size: 83px;
+        font-weight: 800;
+        color: rgb(48, 94, 159);
+        line-height: 116px;
+        margin: 0;
+        margin-top: 0px;
+        margin-bottom: 0px;
+        margin-left: 0px;
+        text-transform: none;
+        font-family: 'Poppins', sans-serif;
+        letter-spacing: 0;
+        min-height: 116px;
+      }
+
+      .newsletter-title-sub {
+        font-size: 44px;
+        font-weight: 800;
+        color: rgb(48, 94, 159);
+        line-height: 62px;
+        margin: 0;
+        margin-left: 0px;
+        text-transform: none;
+        font-family: 'Poppins', sans-serif;
+        letter-spacing: 0;
+        min-height: 62px;
+      }
+
+      .newsletter-content {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 40px;
+        padding: 0 46px;
+        position: relative;
+      }
+
+      .newsletter-left-column {
+        position: relative;
+      }
+
+      .newsletter-right-column {
+        position: relative;
+      }
+
+      .decorative-line-horizontal {
+        position: absolute;
+        width: 694.587px;
+        height: 5px;
+        background: rgb(48, 94, 159);
+        top: 215px;
+        left: 52px;
+        z-index: 2;
+        pointer-events: none;
+      }
+
+      .decorative-line-horizontal-title {
+        width: 100%;
+        height: 5px;
+        background: rgb(48, 94, 159);
+        margin-top: 20px;
+        pointer-events: none;
+      }
+
+      .decorative-line-vertical {
+        position: absolute;
+        width: 5px;
+        height: 250px;
+        background: rgb(48, 94, 159);
+        top: 902px;
+        right: 283px;
+        z-index: 2;
+        pointer-events: none;
+      }
+
+      .newsletter-preview[data-page-type="gallery"] .decorative-line-vertical {
+        z-index: 0;
+      }
+
+      .newsletter-preview[data-page-type="gallery"] .gallery-image-item {
+        position: relative;
+        z-index: 1;
+      }
+
+      .newsletter-image-main {
+        width: 447.635px;
+        height: 255.769px;
+        background: #e5e7eb;
+        margin: 20px 0;
+        border-radius: 4px;
+        overflow: hidden;
+        position: relative;
+      }
+
+      .newsletter-image-main img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
+
+      .newsletter-image-bottom {
+        width: 378.746px;
+        height: 125.819px;
+        background: #e5e7eb;
+        margin: 20px 0;
+        border-radius: 4px;
+        overflow: hidden;
+        position: relative;
+      }
+
+      .newsletter-image-bottom img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
+
+      .section-title {
+        font-size: 33px;
+        font-weight: 800;
+        color: rgb(48, 94, 159);
+        line-height: 46px;
+        margin: 0 0 15px 0;
+        text-transform: uppercase;
+        font-family: 'Poppins', sans-serif;
+        min-height: 46px;
+      }
+
+      .section-content {
+        font-size: 19px;
+        line-height: 26px;
+        color: rgb(7, 10, 14);
+        margin: 0 0 20px 0;
+        text-align: left;
+        font-weight: 400;
+        font-family: 'Poppins', sans-serif;
+        min-height: 26px;
+      }
+
+      .business-news-header {
+        font-size: 36px;
+        font-weight: 800;
+        color: rgb(48, 94, 159);
+        line-height: 36px;
+        margin: 0 0 10px 0;
+        text-transform: none;
+        font-family: 'Poppins', sans-serif;
+        min-height: 108px;
+      }
+
+      .business-news-subtitle {
+        font-size: 29px;
+        font-weight: 400;
+        color: rgb(48, 94, 159);
+        line-height: 41px;
+        margin: 0 0 15px 0;
+        font-family: 'Poppins', sans-serif;
+        min-height: 41px;
+      }
+
+      .business-news-content {
+        font-size: 16px;
+        line-height: 23px;
+        color: rgb(7, 10, 14);
+        margin: 0;
+        font-weight: 400;
+        font-family: 'Poppins', sans-serif;
+        min-height: 23px;
+      }
+
+      .partnership-title {
+        font-size: 33px;
+        font-weight: 800;
+        color: rgb(48, 94, 159);
+        line-height: 36px;
+        margin: 0 0 15px 0;
+        text-transform: uppercase;
+        font-family: 'Poppins', sans-serif;
+        min-height: 36px;
+      }
+
+      .partnership-content {
+        font-size: 12px;
+        line-height: 18px;
+        color: rgb(7, 10, 14);
+        margin: 0;
+        font-weight: 400;
+        font-family: 'Poppins', sans-serif;
+        min-height: 18px;
+      }
+
+      .key-events-title {
+        font-size: 33px;
+        font-weight: 800;
+        color: rgb(48, 94, 159);
+        line-height: 46px;
+        margin: 0 0 15px 0;
+        text-transform: uppercase;
+        font-family: 'Poppins', sans-serif;
+        min-height: 46px;
+      }
+
+      .events-list-preview {
+        list-style: disc;
+        padding-left: 20px;
+        margin: 0;
+      }
+
+      .events-list-preview li {
+        padding: 0 0 8px 0;
+        font-size: 12px;
+        line-height: 16px;
+        color: rgb(7, 10, 14);
+        text-align: left;
+        font-weight: 400;
+        font-family: 'Poppins', sans-serif;
+        list-style-type: disc;
+        min-height: 16px;
+        cursor: text;
+        outline: none;
+      }
+
+      .events-list-preview li:hover {
+        background-color: rgba(59, 130, 246, 0.05);
+        border-radius: 4px;
+      }
+
+      .events-list-preview li:focus {
+        background-color: rgba(59, 130, 246, 0.1);
+        border-radius: 4px;
+        box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+      }
+
+      .add-event-btn {
+        margin-top: 10px;
+        padding: 8px 16px;
+        background: #10b981;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 12px;
+        font-weight: 600;
+        font-family: 'Poppins', sans-serif;
+      }
+
+      .add-event-btn:hover {
+        background: #059669;
+      }
+
+      .remove-event-btn {
+        margin-left: 10px;
+        padding: 4px 8px;
+        background: #ef4444;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 10px;
+        font-weight: 600;
+      }
+
+      .remove-event-btn:hover {
+        background: #dc2626;
+      }
+
+
+      @media print {
+        @page {
+          margin: 0;
+        }
+
+        body {
+          margin: 0;
+          padding: 0;
+        }
+
+        .toolbar,
+        .container,
+        .editor-wrapper,
+        .add-page-section,
+        .page-controls,
+        .page-number,
+        .gallery-add-image-btn,
+        .add-event-btn,
+        .gallery-image-controls,
+        .gallery-btn-delete {
+          display: none !important;
+        }
+
+        .page-wrapper {
+          margin: 0 !important;
+          padding: 0 !important;
+        }
+
+        .newsletter-preview {
+          margin: 0 !important;
+          page-break-after: always;
+        }
+
+        .newsletter-preview:last-child {
+          page-break-after: auto;
+        }
+      }
+
+      @media (max-width: 768px) {
+        .newsletter-preview {
+          width: 100%;
+          height: auto;
+          transform: scale(0.6);
+        }
+
+        .toolbar {
+          flex-direction: column;
+          gap: 10px;
+        }
+
+        .toolbar-actions {
+          flex-wrap: wrap;
+          justify-content: center;
+        }
+      }
+
+      .empty-placeholder {
+        color: #9ca3af;
+        font-style: italic;
+      }
+
+      .pages-container {
+        display: flex;
+        flex-direction: column;
+        gap: 30px;
+        align-items: center;
+      }
+
+      .page-wrapper {
+        position: relative;
+      }
+
+      .page-controls {
+        position: absolute;
+        top: -40px;
+        right: 0;
+        display: flex;
+        gap: 10px;
+        z-index: 10;
+      }
+
+      .page-number {
+        position: absolute;
+        top: 960px;
+        left: 440px;
+        font-weight: 600;
+        color: #1e3a8a;
+        font-size: 14px;
+      }
+
+      .btn-page-control {
+        padding: 6px 12px;
+        border: none;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-family: 'Poppins', sans-serif;
+      }
+
+      .btn-delete-page {
+        background-color: #ef4444;
+        color: white;
+      }
+
+      .btn-delete-page:hover {
+        background-color: #dc2626;
+      }
+
+      .add-page-section {
+        margin-top: 40px;
+        padding: 30px;
+        text-align: center;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
+
+      .btn-add-page {
+        padding: 14px 28px;
+        background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+        color: white;
+        border: none;
+        border-radius: 6px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-family: 'Poppins', sans-serif;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .btn-add-page:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(30, 58, 138, 0.3);
+      }
+
+      .gallery-page {
+        display: flex;
+        flex-direction: column;
+        min-height: 100%;
+      }
+
+      .gallery-section {
+        flex: 0 1 auto;
+        display: flex;
+        flex-direction: column;
+        padding: 40px;
+        border-bottom: 3px solid rgb(48, 94, 159);
+        min-height: 400px;
+      }
+
+      .gallery-section:last-child {
+        border-bottom: none;
+      }
+
+      .gallery-section-title {
+        font-size: 36px;
+        font-weight: 800;
+        color: rgb(48, 94, 159);
+        margin-bottom: 20px;
+        text-align: center;
+        text-transform: uppercase;
+        font-family: 'Poppins', sans-serif;
+      }
+
+      .gallery-images {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 15px;
+        flex: 0 1 auto;
+        position: relative;
+        padding-right: 60px;
+        min-height: 200px;
+      }
+
+      .gallery-image-item {
+        width: 100%;
+        height: 200px;
+        background: #e5e7eb;
+        border-radius: 4px;
+        overflow: hidden;
+        position: relative;
+        cursor: pointer;
+      }
+
+      .gallery-image-item img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .gallery-image-controls {
+        position: absolute;
+        top: 5px;
+        right: 5px;
+        display: flex;
+        gap: 5px;
+        z-index: 10;
+        opacity: 0;
+        transition: opacity 0.2s ease;
+      }
+
+      .gallery-image-item:hover .gallery-image-controls {
+        opacity: 1;
+      }
+
+      .gallery-btn {
+        width: 28px;
+        height: 28px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+      }
+
+      .gallery-btn-add {
+        background-color: #10b981;
+        color: white;
+      }
+
+      .gallery-btn-add:hover {
+        background-color: #059669;
+      }
+
+      .gallery-btn-delete {
+        background-color: #ef4444;
+        color: white;
+      }
+
+      .gallery-btn-delete:hover {
+        background-color: #dc2626;
+      }
+
+      .gallery-section {
+        position: relative;
+      }
+
+      .gallery-add-image-btn {
+        width: 40px;
+        height: 40px;
+        background: #10b981;
+        border: none;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        color: white;
+        font-size: 24px;
+        font-weight: bold;
+        position: absolute;
+        top: 50%;
+        right: 10px;
+        transform: translateY(-50%);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        z-index: 10;
+      }
+
+      .gallery-add-image-btn:hover {
+        background: #059669;
+        transform: translateY(-50%) scale(1.1);
+      }
+
+      .gallery-images {
+        position: relative;
+        padding-right: 60px;
+      }
+
+      .layout-single-column {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        padding: 0 46px;
+      }
+
+      .layout-two-column {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 40px;
+        padding: 0 46px;
+      }
+
+      .layout-three-column {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 30px;
+        padding: 0 46px;
+      }
+
+      .layout-image-left {
+        display: grid;
+        grid-template-columns: 1fr 2fr;
+        gap: 30px;
+        padding: 0 46px;
+      }
+
+      .layout-image-right {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 30px;
+        padding: 0 46px;
+      }
+    </style>
+</head>
+<body>
+    <div class="toolbar">
+        <div class="toolbar-title">📰 Newsletter Builder</div>
+        <div class="toolbar-actions">
+            <button class="btn-toolbar btn-secondary" id="saveButton" onclick="downloadPDF()">
+                <span class="save-icon">💾</span>
+                <span class="save-text">Save</span>
+                <span class="save-spinner" style="display: none;">⏳</span>
+            </button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="editor-wrapper">
+            <div class="pages-container" id="pagesContainer">
+                <div class="page-wrapper" data-page-id="1">
+                    <div class="page-number">Page 1</div>
+                    <div class="page-controls">
+                        <button class="btn-page-control btn-delete-page" data-page-id="1" style="display: none;">🗑️ Delete</button>
+                    </div>
+                    <div class="newsletter-preview" data-page-type="content">
+                <div class="decorative-line-horizontal"></div>
+                <div class="decorative-line-vertical"></div>
+                
+                <div class="newsletter-header">
+                    <div class="newsletter-logo-left">
+                        <img src="assets/images/ace_risland_logo.png" alt="ACE Risland Logo" />
+                    </div>
+                    <div class="newsletter-logo editable-image" onclick="changeImage(this, 'logo')">
+                        <input type="file" accept="image/*" class="image-upload-input" id="logoInput" onchange="handleImageUpload(event, this.parentElement)">
+                        <img src="assets/images/TAAOWA-logo-new-transperent-bg.png" alt="Logo" />
+                    </div>
+                    <div class="newsletter-title-wrapper">
+                        <h1 class="newsletter-title-main editable" contenteditable="true" data-placeholder="NEWSLETTER">TAAOWA</h1>
+                        <h2 class="newsletter-title-sub editable" contenteditable="true" data-placeholder="COMPANY">NEWSLETTER</h2>
+                    </div>
+                </div>
+
+                <div class="newsletter-content">
+                    <div class="newsletter-left-column">
+                        <div style="margin-top: 20px;">
+                            <h2 class="section-title editable" contenteditable="true" data-placeholder="THIS WEEK'S REPORT">THIS WEEK'S REPORT</h2>
+                            <p class="section-content editable" contenteditable="true" data-placeholder="Enter this week's report...">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed mauris mi, sodales sed scelerisque ac, aliquet at tortor. Sed vitae ullamcorper leo. Nunc condimentum, augue sed finibus scelerisque, augue nulla faucibus nisi, a tristique augue felis at est.</p>
+                        </div>
+
+                        <div class="newsletter-image-main editable-image" onclick="changeImage(this, 'main')">
+                            <input type="file" accept="image/*" class="image-upload-input" id="mainImageInput" onchange="handleImageUpload(event, this.parentElement)">
+                            <img src="https://media-public.canva.com/MlWuo/MADyQ_MlWuo/1/s.jpg" alt="Photo Of People Having Discussion" />
+                        </div>
+
+                        <div style="margin-top: 20px;">
+                            <h2 class="partnership-title editable" contenteditable="true" data-placeholder="THE DISCUSSION ABOUT PARTNERSHIP">THE DISCUSSION ABOUT PARTNERSHIP</h2>
+                            <p class="partnership-content editable" contenteditable="true" data-placeholder="Enter partnership content...">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed mauris mi, sodales sed scelerisque ac, aliquet at tortor. Sed vitae ullamcorper leo. Nunc condimentum, augue sed finibus scelerisque, augue nulla faucibus nisi, a tristique augue felis at est.</p>
+                        </div>
+
+                        <div class="newsletter-image-bottom editable-image" onclick="changeImage(this, 'bottom')">
+                            <input type="file" accept="image/*" class="image-upload-input" id="bottomImageInput" onchange="handleImageUpload(event, 'bottom')">
+                            <img src="https://media-public.canva.com/MADGv-Z47yI/7/screen.jpg" alt="People Sitting on Chairs Beside their Desks in an office" />
+                        </div>
+                    </div>
+                    <div class="newsletter-right-column">
+                        <div style="margin-top: 50px;">
+                            <h2 class="business-news-header editable" data-placeholder="INGOUDE
+BUSINESS
+NEWS" data-initialized="true">INGOUDE<br>BUSINESS<br>NEWS</h2>
+                    <div class="newsletter-right-column">
+                        <div style="margin-top: 50px;">
+                            <h3 class="business-news-subtitle editable" contenteditable="true" data-placeholder="2023-2024">2023-2024</h3>
+                            <p class="business-news-content editable" contenteditable="true" data-placeholder="Enter business news...">Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+                        </div>
+
+                        <div style="margin-top: 60px;">
+                            <h2 class="key-events-title editable" contenteditable="true" data-placeholder="KEY EVENTS">KEY EVENTS</h2>
+                            <p class="section-content editable" contenteditable="true" data-placeholder="Enter event description..." style="margin-bottom: 10px;">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed mauris mi, sodales sed scelerisque ac, aliquet at tortor.</p>
+                            <ul class="events-list-preview" id="eventsList">
+                                <li contenteditable="true" class="editable" data-placeholder="Event item 1">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed mauris mi, sodales sed scelerisque ac, aliquet at tortor.</li>
+                                <li contenteditable="true" class="editable" data-placeholder="Event item 2">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed mauris mi, sodales sed scelerisque ac, aliquet at tortor.</li>
+                                <li contenteditable="true" class="editable" data-placeholder="Event item 3">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed mauris mi, sodales sed scelerisque ac, aliquet at tortor.</li>
+                            </ul>
+                            <button class="add-event-btn" onclick="addEventItem()">+ Add Event</button>
+                        </div>
+                    </div>
+                </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="add-page-section">
+            <button class="btn-add-page" onclick="addNewPage()">
+                <span>➕</span>
+                <span>Add Page</span>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        let pageCounter = 1;
+        const layouts = ['two-column', 'single-column', 'three-column', 'image-left', 'image-right'];
+        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwDx2NWivsXfQ-V4Lhs9W2Qed0v2hbQ3R1yRRcVD5fUnGt-ETzOrv6GOpfQsYK6rRl4/exec';
+        
+        // Initialize IndexedDB for image storage and page hashes
+        let imageDB = null;
+        const DB_NAME = 'newsletter_images';
+        const DB_VERSION = 2; // Increment version to add page hashes store
+        const STORE_NAME = 'images';
+        const PAGE_HASHES_STORE = 'pageHashes';
+        
+        async function initImageDB() {
+            return new Promise((resolve, reject) => {
+                if (imageDB) {
+                    resolve(imageDB);
+                    return;
+                }
+                
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+                
+                request.onerror = () => {
+                    console.error('Failed to open IndexedDB:', request.error);
+                    reject(request.error);
+                };
+                
+                request.onsuccess = () => {
+                    imageDB = request.result;
+                    resolve(imageDB);
+                };
+                
+                request.onupgradeneeded = (event) => {
+                    const db = event.target.result;
+                    if (!db.objectStoreNames.contains(STORE_NAME)) {
+                        const objectStore = db.createObjectStore(STORE_NAME, { keyPath: 'fileId' });
+                        objectStore.createIndex('timestamp', 'timestamp', { unique: false });
+                    }
+                    // Add page hashes store
+                    if (!db.objectStoreNames.contains(PAGE_HASHES_STORE)) {
+                        const pageHashesStore = db.createObjectStore(PAGE_HASHES_STORE, { keyPath: 'fileId' });
+                        pageHashesStore.createIndex('pageNumber', 'pageNumber', { unique: false });
+                        pageHashesStore.createIndex('hash', 'hash', { unique: false });
+                    }
+                };
+            });
+        }
+        
+        // Store page hash in IndexedDB
+        async function storePageHash(fileId, pageNumber, contentHash) {
+            try {
+                const db = await initImageDB();
+                const transaction = db.transaction([PAGE_HASHES_STORE], 'readwrite');
+                const store = transaction.objectStore(PAGE_HASHES_STORE);
+                
+                await new Promise((resolve, reject) => {
+                    const request = store.put({
+                        fileId: fileId,
+                        pageNumber: pageNumber,
+                        hash: contentHash,
+                        timestamp: Date.now()
+                    });
+                    request.onsuccess = () => {
+                        console.log(`[Hash] Stored hash for page ${pageNumber}, file ID: ${fileId}`);
+                        resolve();
+                    };
+                    request.onerror = () => {
+                        console.error('Error storing page hash:', request.error);
+                        reject(request.error);
+                    };
+                });
+            } catch (error) {
+                console.error('Error storing page hash:', error);
+            }
+        }
+        
+        // Get page hash from IndexedDB
+        async function getPageHash(fileId) {
+            try {
+                const db = await initImageDB();
+                const transaction = db.transaction([PAGE_HASHES_STORE], 'readonly');
+                const store = transaction.objectStore(PAGE_HASHES_STORE);
+                
+                const data = await new Promise((resolve, reject) => {
+                    const request = store.get(fileId);
+                    request.onsuccess = () => resolve(request.result);
+                    request.onerror = () => reject(request.error);
+                });
+                
+                return data ? data.hash : null;
+            } catch (error) {
+                console.error('Error getting page hash:', error);
+                return null;
+            }
+        }
+        
+        // Find page by hash from IndexedDB
+        async function findPageByHash(pageNumber, contentHash) {
+            try {
+                const db = await initImageDB();
+                const transaction = db.transaction([PAGE_HASHES_STORE], 'readonly');
+                const store = transaction.objectStore(PAGE_HASHES_STORE);
+                const index = store.index('hash');
+                
+                const result = await new Promise((resolve, reject) => {
+                    const request = index.getAll(contentHash);
+                    request.onsuccess = () => resolve(request.result);
+                    request.onerror = () => reject(request.error);
+                });
+                
+                // Find matching hash and page number
+                const match = result.find(r => r.hash === contentHash && r.pageNumber === pageNumber);
+                return match ? match.fileId : null;
+            } catch (error) {
+                console.error('Error finding page by hash:', error);
+                return null;
+            }
+        }
+        
+        // Store image in IndexedDB (preferred) or localStorage (fallback)
+        async function storeImageInLocalStorage(fileId, dataUrl) {
+            // Check data URL size (rough estimate)
+            const sizeEstimate = dataUrl.length * 0.75; // Base64 is ~33% larger than binary
+            
+            try {
+                // Try IndexedDB first (for larger images)
+                if (sizeEstimate > 100000 || true) { // Always use IndexedDB for now
+                    try {
+                        const db = await initImageDB();
+                        const transaction = db.transaction([STORE_NAME], 'readwrite');
+                        const store = transaction.objectStore(STORE_NAME);
+                        
+                        await new Promise((resolve, reject) => {
+                            const request = store.put({
+                                fileId: fileId,
+                                dataUrl: dataUrl,
+                                timestamp: Date.now()
+                            });
+                            request.onsuccess = () => {
+                                console.log(`Image stored in IndexedDB with fileId: ${fileId}`);
+                                resolve();
+                            };
+                            request.onerror = () => {
+                                console.error('Error storing in IndexedDB:', request.error);
+                                reject(request.error);
+                            };
+                        });
+                        return; // Successfully stored in IndexedDB
+                    } catch (dbError) {
+                        console.warn('IndexedDB storage failed, falling back to localStorage:', dbError);
+                        // Fall through to localStorage
+                    }
+                }
+                
+                // Fallback to localStorage for small images
+                const key = `newsletter_image_${fileId}`;
+                localStorage.setItem(key, dataUrl);
+                console.log(`Image stored in localStorage with key: ${key}`);
+            } catch (error) {
+                console.error('Error storing image:', error);
+                // If quota exceeded, try aggressive cleanup
+                if (error.name === 'QuotaExceededError') {
+                    await aggressiveCleanup();
+                    try {
+                        // Try IndexedDB again after cleanup
+                        const db = await initImageDB();
+                        const transaction = db.transaction([STORE_NAME], 'readwrite');
+                        const store = transaction.objectStore(STORE_NAME);
+                        await new Promise((resolve, reject) => {
+                            const request = store.put({
+                                fileId: fileId,
+                                dataUrl: dataUrl,
+                                timestamp: Date.now()
+                            });
+                            request.onsuccess = () => resolve();
+                            request.onerror = () => reject(request.error);
+                        });
+                        console.log(`Image stored in IndexedDB after cleanup: ${fileId}`);
+                    } catch (e) {
+                        console.error('Still unable to store image after cleanup:', e);
+                        // Last resort: don't store, just return the dataUrl
+                        return dataUrl;
+                    }
+                }
+            }
+        }
+        
+        // Get image from IndexedDB or localStorage
+        async function getImageFromLocalStorage(fileId) {
+            try {
+                // Try IndexedDB first
+                try {
+                    const db = await initImageDB();
+                    const transaction = db.transaction([STORE_NAME], 'readonly');
+                    const store = transaction.objectStore(STORE_NAME);
+                    
+                    const data = await new Promise((resolve, reject) => {
+                        const request = store.get(fileId);
+                        request.onsuccess = () => resolve(request.result);
+                        request.onerror = () => reject(request.error);
+                    });
+                    
+                    if (data && data.dataUrl) {
+                        console.log(`Image ${fileId} found in IndexedDB cache`);
+                        return data.dataUrl;
+                    }
+                } catch (dbError) {
+                    console.warn('IndexedDB retrieval failed, trying localStorage:', dbError);
+                }
+                
+                // Fallback to localStorage
+                const key = `newsletter_image_${fileId}`;
+                const cached = localStorage.getItem(key);
+                if (cached) {
+                    console.log(`Image ${fileId} found in localStorage cache`);
+                    return cached;
+                }
+                
+                return null;
+            } catch (error) {
+                console.error('Error getting image:', error);
+                return null;
+            }
+        }
+        
+        // Aggressive cleanup - remove old images from both IndexedDB and localStorage
+        async function aggressiveCleanup() {
+            try {
+                // Clean IndexedDB - keep only last 50 images
+                try {
+                    const db = await initImageDB();
+                    const transaction = db.transaction([STORE_NAME], 'readwrite');
+                    const store = transaction.objectStore(STORE_NAME);
+                    const index = store.index('timestamp');
+                    
+                    const allImages = await new Promise((resolve, reject) => {
+                        const request = index.getAll();
+                        request.onsuccess = () => resolve(request.result);
+                        request.onerror = () => reject(request.error);
+                    });
+                    
+                    // Sort by timestamp (oldest first)
+                    allImages.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+                    
+                    // Keep only last 50
+                    if (allImages.length > 50) {
+                        const toRemove = allImages.slice(0, allImages.length - 50);
+                        for (const img of toRemove) {
+                            await new Promise((resolve, reject) => {
+                                const request = store.delete(img.fileId);
+                                request.onsuccess = () => resolve();
+                                request.onerror = () => reject(request.error);
+                            });
+                        }
+                        console.log(`Cleaned up ${toRemove.length} old images from IndexedDB`);
+                    }
+                } catch (dbError) {
+                    console.warn('IndexedDB cleanup failed:', dbError);
+                }
+                
+                // Clean localStorage - keep only last 20 images
+                const imageKeys = Object.keys(localStorage).filter(key => key.startsWith('newsletter_image_'));
+                if (imageKeys.length > 20) {
+                    const keysToRemove = imageKeys.slice(0, imageKeys.length - 20);
+                    keysToRemove.forEach(key => localStorage.removeItem(key));
+                    console.log(`Cleaned up ${keysToRemove.length} old images from localStorage`);
+                }
+            } catch (error) {
+                console.error('Error in aggressive cleanup:', error);
+            }
+        }
+        
+        // Clean up old images (less aggressive, called periodically)
+        async function cleanupOldImages() {
+            await aggressiveCleanup();
+        }
+        
+        // Download image from Google Drive and store in localStorage
+        async function downloadAndStoreImage(fileId) {
+            try {
+                // Check if already in localStorage
+                const cachedImage = getImageFromLocalStorage(fileId);
+                if (cachedImage) {
+                    console.log(`Image ${fileId} found in localStorage cache`);
+                    return cachedImage;
+                }
+                
+                // Download from Google Drive
+                console.log(`Downloading image ${fileId} from Google Drive...`);
+                const response = await fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'cors',
+                    cache: 'no-store',
+                    headers: {
+                        'Content-Type': 'text/plain;charset=utf-8',
+                    },
+                    body: JSON.stringify({
+                        action: 'download',
+                        id: fileId
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`Download failed: ${response.statusText}`);
+                }
+                
+                // Get the blob
+                const blob = await response.blob();
+                
+                // Convert to data URL
+                const dataUrl = await new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = () => resolve(reader.result);
+                    reader.onerror = reject;
+                    reader.readAsDataURL(blob);
+                });
+                
+                // Store in IndexedDB/localStorage
+                await storeImageInLocalStorage(fileId, dataUrl);
+                
+                return dataUrl;
+            } catch (error) {
+                console.error(`Error downloading image ${fileId}:`, error);
+                return null;
+            }
+        }
+        
+        // Upload file to Google Drive via Apps Script
+        async function uploadToGoogleDrive(file, filename) {
+            try {
+                // Convert file to base64
+                const base64 = await new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = () => {
+                        // Remove data URL prefix (e.g., "data:image/jpeg;base64,")
+                        const base64String = reader.result.split(',')[1];
+                        resolve(base64String);
+                    };
+                    reader.onerror = reject;
+                    reader.readAsDataURL(file);
+                });
+                
+                // Upload to Google Drive using POST with text/plain (avoids CORS preflight)
+                const response = await fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'cors',
+                    cache: 'no-store',
+                    headers: {
+                        'Content-Type': 'text/plain;charset=utf-8',
+                    },
+                    body: JSON.stringify({
+                        action: 'upload',
+                        base64: base64,
+                        type: file.type || 'application/octet-stream',
+                        name: filename
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`Upload failed: ${response.statusText}`);
+                }
+                
+                const result = await response.json();
+                
+                // The script returns { status: "success", data: { id: "...", name: "...", url: "..." } }
+                if (result.status === 'success' && result.data && result.data.id) {
+                    return {
+                        url: result.data.url || `${GOOGLE_SCRIPT_URL}?action=download&id=${result.data.id}`,
+                        id: result.data.id
+                    };
+                } else if (result.status === 'error') {
+                    throw new Error(result.data?.error || 'Upload failed');
+                } else {
+                    // Fallback: try to find file by name
+                    try {
+                        const listResponse = await fetch(GOOGLE_SCRIPT_URL, {
+                            method: 'POST',
+                            mode: 'cors',
+                            cache: 'no-store',
+                            headers: {
+                                'Content-Type': 'text/plain;charset=utf-8',
+                            },
+                            body: JSON.stringify({ action: 'list' })
+                        });
+                        if (listResponse.ok) {
+                            const listResult = await listResponse.json();
+                            const files = listResult.data || [];
+                            const uploadedFile = Array.isArray(files) ? files.find(f => f.name === filename) : null;
+                            if (uploadedFile) {
+                                return {
+                                    url: `${GOOGLE_SCRIPT_URL}?action=download&id=${uploadedFile.id}`,
+                                    id: uploadedFile.id
+                                };
+                            }
+                        }
+                    } catch (error) {
+                        console.error('Error finding uploaded file:', error);
+                    }
+                    throw new Error('Upload succeeded but file ID not returned');
+                }
+            } catch (error) {
+                console.error('Error uploading to Google Drive:', error);
+                // Fallback to data URL if upload fails
+                return new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => resolve(e.target.result);
+                    reader.readAsDataURL(file);
+                });
+            }
+        }
+        
+        // Check if file exists and get next available filename
+        async function getAvailableFilename(baseFilename) {
+            let filename = baseFilename;
+            let counter = 0;
+            
+            try {
+                // Get list of files from Google Drive using POST
+                const response = await fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'cors',
+                    cache: 'no-store',
+                    headers: {
+                        'Content-Type': 'text/plain;charset=utf-8',
+                    },
+                    body: JSON.stringify({ action: 'list' })
+                });
+                if (!response.ok) {
+                    return filename; // If list fails, just use the base filename
+                }
+                
+                const result = await response.json();
+                const files = result.data || [];
+                const existingNames = files.map(f => f.name);
+                
+                // Check if filename exists, if so, append number
+                while (existingNames.includes(filename)) {
+                    counter++;
+                    const ext = baseFilename.substring(baseFilename.lastIndexOf('.'));
+                    const nameWithoutExt = baseFilename.substring(0, baseFilename.lastIndexOf('.'));
+                    filename = `${nameWithoutExt}${counter}${ext}`;
+                }
+                
+                return filename;
+            } catch (error) {
+                console.error('Error checking filename availability:', error);
+                // If check fails, assume file doesn't exist
+                return filename;
+            }
+        }
+        
+        // Calculate SHA-256 hash of content for duplicate detection
+        async function calculateContentHash(content) {
+            try {
+                const encoder = new TextEncoder();
+                const data = encoder.encode(content);
+                const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+                const hashArray = Array.from(new Uint8Array(hashBuffer));
+                const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+                return hashHex;
+            } catch (error) {
+                console.error('Error calculating hash:', error);
+                // Fallback: use a simple hash if crypto API fails
+                let hash = 0;
+                for (let i = 0; i < content.length; i++) {
+                    const char = content.charCodeAt(i);
+                    hash = ((hash << 5) - hash) + char;
+                    hash = hash & hash; // Convert to 32-bit integer
+                }
+                return Math.abs(hash).toString(16);
+            }
+        }
+        
+        // Check if a page with the same content already exists
+        async function findExistingPageByHash(pageNumber, contentHash) {
+            try {
+                // First, check IndexedDB for faster lookup
+                const existingFileId = await findPageByHash(pageNumber, contentHash);
+                if (existingFileId) {
+                    console.log(`[Save] Found matching hash in IndexedDB for page ${pageNumber}, file ID: ${existingFileId}`);
+                    // Verify the file still exists in Google Drive
+                    try {
+                        const listResponse = await fetch(GOOGLE_SCRIPT_URL, {
+                            method: 'POST',
+                            mode: 'cors',
+                            cache: 'no-store',
+                            headers: {
+                                'Content-Type': 'text/plain;charset=utf-8',
+                            },
+                            body: JSON.stringify({ action: 'list' })
+                        });
+                        
+                        if (listResponse.ok) {
+                            const listResult = await listResponse.json();
+                            const allFiles = listResult.data || [];
+                            const filesArray = Array.isArray(allFiles) ? allFiles : [];
+                            const file = filesArray.find(f => f.id === existingFileId);
+                            
+                            if (file) {
+                                console.log(`[Save] Page ${pageNumber} content unchanged, found existing file: ${file.name} (ID: ${existingFileId})`);
+                                return {
+                                    fileId: existingFileId,
+                                    filename: file.name,
+                                    url: `${GOOGLE_SCRIPT_URL}?action=download&id=${existingFileId}`
+                                };
+                            } else {
+                                console.log(`[Save] File ${existingFileId} not found in Google Drive, will save new version`);
+                            }
+                        }
+                    } catch (error) {
+                        console.warn(`Error verifying file ${existingFileId}:`, error);
+                    }
+                }
+                
+                // Fallback: Get list of files from Google Drive and check latest
+                const listResponse = await fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'cors',
+                    cache: 'no-store',
+                    headers: {
+                        'Content-Type': 'text/plain;charset=utf-8',
+                    },
+                    body: JSON.stringify({ action: 'list' })
+                });
+                
+                if (!listResponse.ok) {
+                    return null;
+                }
+                
+                const listResult = await listResponse.json();
+                const allFiles = listResult.data || [];
+                const filesArray = Array.isArray(allFiles) ? allFiles : [];
+                
+                // Filter for pages with the same page number
+                const pageFiles = filesArray.filter(f => {
+                    const match = f.name && f.name.match(/newsletter-page-(\d+)-/);
+                    return match && parseInt(match[1]) === pageNumber;
+                });
+                
+                if (pageFiles.length === 0) {
+                    return null;
+                }
+                
+                // Sort by timestamp to get the latest version first
+                pageFiles.sort((a, b) => {
+                    const aTimeMatch = a.name.match(/-(\d{4}-\d{2}-\d{2}T[\d-]+)\.html$/);
+                    const bTimeMatch = b.name.match(/-(\d{4}-\d{2}-\d{2}T[\d-]+)\.html$/);
+                    if (aTimeMatch && bTimeMatch) {
+                        return bTimeMatch[1].localeCompare(aTimeMatch[1]); // Latest first
+                    }
+                    return b.name.localeCompare(a.name);
+                });
+                
+                // Only check the latest version (most likely to match)
+                const latestFile = pageFiles[0];
+                try {
+                    // Check if we have hash in IndexedDB for this file
+                    const storedHash = await getPageHash(latestFile.id);
+                    if (storedHash === contentHash) {
+                        console.log(`[Save] Page ${pageNumber} content unchanged (hash from IndexedDB), found existing file: ${latestFile.name} (ID: ${latestFile.id})`);
+                        return {
+                            fileId: latestFile.id,
+                            filename: latestFile.name,
+                            url: `${GOOGLE_SCRIPT_URL}?action=download&id=${latestFile.id}`
+                        };
+                    }
+                    
+                    // If no stored hash or hash differs, download and verify
+                    const pageResponse = await fetch(GOOGLE_SCRIPT_URL, {
+                        method: 'POST',
+                        mode: 'cors',
+                        cache: 'no-store',
+                        headers: {
+                            'Content-Type': 'text/plain;charset=utf-8',
+                        },
+                        body: JSON.stringify({
+                            action: 'download',
+                            id: latestFile.id
+                        })
+                    });
+                    
+                    if (pageResponse.ok) {
+                        const pageContent = await pageResponse.text();
+                        const existingHash = await calculateContentHash(pageContent);
+                        
+                        // Store hash for future lookups
+                        await storePageHash(latestFile.id, pageNumber, existingHash);
+                        
+                        if (existingHash === contentHash) {
+                            console.log(`[Save] Page ${pageNumber} content unchanged, found existing file: ${latestFile.name} (ID: ${latestFile.id})`);
+                            return {
+                                fileId: latestFile.id,
+                                filename: latestFile.name,
+                                url: `${GOOGLE_SCRIPT_URL}?action=download&id=${latestFile.id}`
+                            };
+                        } else {
+                            console.log(`[Save] Page ${pageNumber} content changed (hash differs), will save new version`);
+                        }
+                    }
+                } catch (error) {
+                    console.warn(`Error checking latest file ${latestFile.id}:`, error);
+                    // If check fails, proceed with save to be safe
+                }
+                
+                return null;
+            } catch (error) {
+                console.error('Error finding existing page:', error);
+                return null;
+            }
+        }
+        
+        // Save HTML page to Google Drive
+        async function saveHTMLPage(pageNumber, htmlContent) {
+            try {
+                // Calculate content hash for duplicate detection
+                const contentHash = await calculateContentHash(htmlContent);
+                console.log(`[Save] Page ${pageNumber} content hash: ${contentHash.substring(0, 16)}...`);
+                
+                // Check if identical content already exists
+                const existingPage = await findExistingPageByHash(pageNumber, contentHash);
+                if (existingPage) {
+                    console.log(`[Save] Page ${pageNumber} content unchanged, skipping save. Existing file: ${existingPage.filename}`);
+                    return existingPage.url;
+                }
+                
+                // Content is new or changed, proceed with save
+                const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+                const baseFilename = `newsletter-page-${pageNumber}-${timestamp}.html`;
+                const filename = await getAvailableFilename(baseFilename);
+                
+                const blob = new Blob([htmlContent], { type: 'text/html' });
+                const file = new File([blob], filename, { type: 'text/html' });
+                
+                const result = await uploadToGoogleDrive(file, filename);
+                const url = typeof result === 'string' ? result : result.url;
+                const fileId = typeof result === 'string' ? null : result.id;
+                
+                console.log(`[Save] Page ${pageNumber} saved to Google Drive: ${url}, File ID: ${fileId}`);
+                
+                return url;
+            } catch (error) {
+                console.error(`Error saving page ${pageNumber}:`, error);
+                throw error;
+            }
+        }
+        
+        // Extract file ID from Google Drive URL (enhanced to handle multiple formats)
+        function extractFileIdFromUrl(url) {
+            if (!url) return null;
+            // Try to extract from various Google Drive URL formats
+            // Format 1: ?action=download&id=FILE_ID or &id=FILE_ID
+            let match = url.match(/[?&]id=([^&]+)/);
+            if (match) return match[1];
+            // Format 2: /file/d/FILE_ID/
+            match = url.match(/\/file\/d\/([^\/]+)/);
+            if (match) return match[1];
+            // Format 3: /uc?export=download&id=FILE_ID
+            match = url.match(/\/uc[?&].*id=([^&]+)/);
+            if (match) return match[1];
+            return null;
+        }
+        
+        // No longer using localStorage for pages - always load from Google Drive
+        // But using localStorage for images to avoid broken image issues
+        
+        // Load saved pages from Google Drive - always fetch from Drive
+        let isLoadingPages = false; // Prevent multiple simultaneous loads
+        async function loadSavedPages() {
+            // Prevent multiple simultaneous calls
+            if (isLoadingPages) {
+                console.log('loadSavedPages already in progress, skipping duplicate call');
+                return;
+            }
+            isLoadingPages = true;
+            
+            // Show loading overlay
+            const loadingOverlay = document.createElement('div');
+            loadingOverlay.className = 'loading-overlay';
+            loadingOverlay.innerHTML = `
+                <div class="loading-spinner"></div>
+                <div class="loading-text">Loading pages...</div>
+            `;
+            document.body.appendChild(loadingOverlay);
+            
+            try {
+                console.log('Loading saved pages from Google Drive...');
+                
+                // First, get list of files from Google Drive using POST
+                let pageFiles = [];
+                try {
+                    const listResponse = await fetch(GOOGLE_SCRIPT_URL, {
+                        method: 'POST',
+                        mode: 'cors',
+                        cache: 'no-store',
+                        headers: {
+                            'Content-Type': 'text/plain;charset=utf-8',
+                        },
+                        body: JSON.stringify({ action: 'list' })
+                    });
+                    
+                    if (!listResponse.ok) {
+                        console.error('Failed to fetch file list:', listResponse.status, listResponse.statusText);
+                        const errorText = await listResponse.text();
+                        console.error('Error response:', errorText);
+                        loadingOverlay.remove();
+                        return;
+                    }
+                    
+                    const listResult = await listResponse.json();
+                    console.log('File list response:', listResult);
+                    
+                    // Handle { status: 'success', data: [...] } format
+                    const allFiles = listResult.data || [];
+                    const filesArray = Array.isArray(allFiles) ? allFiles : [];
+                    pageFiles = filesArray.filter(f => f.name && f.name.startsWith('newsletter-page-') && f.name.endsWith('.html'))
+                        .sort((a, b) => {
+                            // Sort by page number and timestamp
+                            const aMatch = a.name.match(/newsletter-page-(\d+)-/);
+                            const bMatch = b.name.match(/newsletter-page-(\d+)-/);
+                            if (aMatch && bMatch) {
+                                const pageDiff = parseInt(aMatch[1]) - parseInt(bMatch[1]);
+                                if (pageDiff !== 0) return pageDiff;
+                            }
+                            return a.name.localeCompare(b.name);
+                        });
+                    
+                    console.log(`Found ${pageFiles.length} newsletter page files`);
+                } catch (error) {
+                    console.error('Error fetching file list from Google Drive:', error);
+                    loadingOverlay.remove();
+                    return;
+                }
+                
+                if (pageFiles.length === 0) {
+                    console.log('No saved pages found in Google Drive');
+                    loadingOverlay.remove();
+                    return;
+                }
+                
+                // Get deleted page IDs from localStorage
+                const deletedPageIdsList = JSON.parse(localStorage.getItem('deletedPageIds') || '[]');
+                console.log('Deleted page IDs:', deletedPageIdsList);
+                
+                // Group pages by page number and get only the latest version of each page
+                const pagesByNumber = {};
+                pageFiles.forEach(file => {
+                    const match = file.name.match(/newsletter-page-(\d+)-/);
+                    if (match) {
+                        const pageNum = parseInt(match[1]);
+                        const uniqueId = `${pageNum}-${file.id}`;
+                        
+                        // Skip if this page instance is marked as deleted
+                        if (deletedPageIdsList.includes(uniqueId)) {
+                            return;
+                        }
+                        
+                        // Get or create array for this page number
+                        if (!pagesByNumber[pageNum]) {
+                            pagesByNumber[pageNum] = [];
+                        }
+                        pagesByNumber[pageNum].push(file);
+                    }
+                });
+                
+                // For each page number, get the latest file (by timestamp in filename or by modified date)
+                const latestPageFiles = [];
+                Object.keys(pagesByNumber).forEach(pageNum => {
+                    const files = pagesByNumber[pageNum];
+                    console.log(`Page ${pageNum}: Found ${files.length} file(s):`, files.map(f => f.name));
+                    
+                    // Sort by modified date if available, otherwise by filename timestamp
+                    files.sort((a, b) => {
+                        // First try to use modified date if available
+                        if (a.modifiedTime && b.modifiedTime) {
+                            return new Date(b.modifiedTime) - new Date(a.modifiedTime); // Latest first
+                        }
+                        // Extract timestamp from filename if available
+                        const aTimeMatch = a.name.match(/-(\d{4}-\d{2}-\d{2}T[\d-]+)\.html$/);
+                        const bTimeMatch = b.name.match(/-(\d{4}-\d{2}-\d{2}T[\d-]+)\.html$/);
+                        if (aTimeMatch && bTimeMatch) {
+                            return bTimeMatch[1].localeCompare(aTimeMatch[1]); // Latest first
+                        }
+                        // Fallback to name comparison (alphabetical, which should work for timestamps)
+                        return b.name.localeCompare(a.name);
+                    });
+                    // Take only the latest file for this page number
+                    if (files.length > 0) {
+                        latestPageFiles.push(files[0]);
+                        console.log(`Page ${pageNum}: Selected latest version: ${files[0].name} (${files.length} total version(s))`);
+                    }
+                });
+                
+                // Sort by page number
+                latestPageFiles.sort((a, b) => {
+                    const aMatch = a.name.match(/newsletter-page-(\d+)-/);
+                    const bMatch = b.name.match(/newsletter-page-(\d+)-/);
+                    if (aMatch && bMatch) {
+                        return parseInt(aMatch[1]) - parseInt(bMatch[1]);
+                    }
+                    return 0;
+                });
+                
+                console.log(`Loading ${latestPageFiles.length} pages (latest version of each page number)`);
+                console.log('Page files to load:', latestPageFiles.map(f => {
+                    const match = f.name.match(/newsletter-page-(\d+)-/);
+                    return `Page ${match ? match[1] : '?'}: ${f.name}`;
+                }));
+                
+                // Clear ALL existing pages before loading saved pages
+                // This ensures we start fresh and don't have duplicates
+                const pagesContainer = document.getElementById('pagesContainer');
+                if (pagesContainer && latestPageFiles.length > 0) {
+                    const allExistingPages = pagesContainer.querySelectorAll('.page-wrapper');
+                    console.log(`Clearing ${allExistingPages.length} existing page(s) before loading saved pages`);
+                    allExistingPages.forEach(page => page.remove());
+                }
+                
+                // Update loading text
+                loadingOverlay.querySelector('.loading-text').textContent = `Loading ${latestPageFiles.length} pages...`;
+                
+                // Load only the latest version of each page from Google Drive
+                const loadedPageNumbers = new Set(); // Track which page numbers we've loaded
+                for (let i = 0; i < latestPageFiles.length; i++) {
+                    const file = latestPageFiles[i];
+                    const match = file.name.match(/newsletter-page-(\d+)-/);
+                    if (match) {
+                        const pageNum = parseInt(match[1]);
+                        
+                        // Double-check: don't load if we've already loaded this page number
+                        if (loadedPageNumbers.has(pageNum)) {
+                            console.warn(`Skipping duplicate page number ${pageNum} for file ${file.name}`);
+                            continue;
+                        }
+                        
+                        loadedPageNumbers.add(pageNum);
+                        loadingOverlay.querySelector('.loading-text').textContent = `Loading page ${i + 1} of ${latestPageFiles.length}...`;
+                        await loadPageFromGoogleDrive(pageNum, file.id);
+                        // Small delay between requests
+                        await new Promise(resolve => setTimeout(resolve, 100));
+                    }
+                }
+                
+                console.log(`Successfully loaded ${loadedPageNumbers.size} unique pages:`, Array.from(loadedPageNumbers).sort((a, b) => a - b));
+                
+                console.log('Finished loading pages, reinitializing editable elements...');
+                
+                // Update page counter to the maximum page number loaded
+                if (latestPageFiles.length > 0) {
+                    const maxPageNum = Math.max(...latestPageFiles.map(file => {
+                        const match = file.name.match(/newsletter-page-(\d+)-/);
+                        return match ? parseInt(match[1]) : 0;
+                    }));
+                    pageCounter = Math.max(pageCounter, maxPageNum);
+                    console.log(`Page counter updated to ${pageCounter}`);
+                }
+                
+                // Hide any pages that are marked as deleted
+                const deletedPageIdsToHide = JSON.parse(localStorage.getItem('deletedPageIds') || '[]');
+                deletedPageIdsToHide.forEach(uniqueId => {
+                    const pageWrapper = document.querySelector(`[data-unique-id="${uniqueId}"]`);
+                    if (pageWrapper) {
+                        pageWrapper.style.display = 'none';
+                    }
+                });
+                
+                // Reinitialize editable elements
+                setTimeout(() => {
+                    initializeEditableElements();
+                    updatePageNumbers();
+                    
+                    // Count and log visible pages for debugging
+                    const visiblePages = document.querySelectorAll('.page-wrapper:not([style*="display: none"])');
+                    const allPages = document.querySelectorAll('.page-wrapper');
+                    console.log(`Pages loaded and initialized. Visible pages: ${visiblePages.length}, Total pages in DOM: ${allPages.length}`);
+                    if (visiblePages.length !== latestPageFiles.length) {
+                        console.warn(`Mismatch: Expected ${latestPageFiles.length} pages, but ${visiblePages.length} are visible!`);
+                        // Log all visible pages for debugging
+                        visiblePages.forEach((page, index) => {
+                            const pageId = page.getAttribute('data-page-id');
+                            const uniqueId = page.getAttribute('data-unique-id');
+                            console.log(`  Visible page ${index + 1}: page-id="${pageId}", unique-id="${uniqueId}"`);
+                        });
+                    }
+                    
+                    loadingOverlay.remove();
+                    isLoadingPages = false; // Reset flag after completion
+                }, 500);
+            } catch (error) {
+                console.error('Error loading saved pages:', error);
+                loadingOverlay.remove();
+                isLoadingPages = false; // Reset flag on error
+            }
+        }
+        
+        // Process images in a loaded page - download and store in localStorage
+        async function processPageImages(pageElement) {
+            if (!pageElement) return;
+            
+            const images = pageElement.querySelectorAll('img');
+            const imagePromises = [];
+            
+            images.forEach(img => {
+                const src = img.getAttribute('src');
+                if (!src) return;
+                
+                // Skip if already a data URL
+                if (src.startsWith('data:')) return;
+                
+                // Skip if it's a local asset (starts with assets/)
+                if (src.startsWith('assets/') || src.startsWith('./assets/')) return;
+                
+                // Try to extract file ID from URL
+                const fileId = extractFileIdFromUrl(src);
+                
+                if (fileId) {
+                    // Store file ID on image element for later reference when saving
+                    img.setAttribute('data-file-id', fileId);
+                    
+                    // Check storage first (IndexedDB or localStorage)
+                    const promise = (async () => {
+                        const cachedImage = await getImageFromLocalStorage(fileId);
+                        if (cachedImage) {
+                            img.src = cachedImage;
+                            // Keep the file ID attribute so we can reference it when saving
+                            console.log(`Image ${fileId} loaded from cache`);
+                        } else {
+                            // Download and store
+                            const dataUrl = await downloadAndStoreImage(fileId);
+                            if (dataUrl) {
+                                img.src = dataUrl;
+                                // Keep the file ID attribute
+                                console.log(`Image ${fileId} downloaded and stored`);
+                            } else {
+                                console.warn(`Failed to download image ${fileId}, keeping original URL`);
+                            }
+                        }
+                    })();
+                    imagePromises.push(promise);
+                } else {
+                    // Not a Google Drive URL, might be a direct URL - try to download if it's from the script
+                    if (src.includes(GOOGLE_SCRIPT_URL)) {
+                        // Try to extract ID from the URL using the enhanced function
+                        const fileId = extractFileIdFromUrl(src);
+                        if (fileId) {
+                            // Store file ID on image element
+                            img.setAttribute('data-file-id', fileId);
+                            
+                            const promise = (async () => {
+                                const cachedImage = await getImageFromLocalStorage(fileId);
+                                if (cachedImage) {
+                                    img.src = cachedImage;
+                                } else {
+                                    const dataUrl = await downloadAndStoreImage(fileId);
+                                    if (dataUrl) {
+                                        img.src = dataUrl;
+                                    }
+                                }
+                            })();
+                            imagePromises.push(promise);
+                        }
+                    }
+                }
+            });
+            
+            // Wait for all images to be processed
+            await Promise.all(imagePromises);
+        }
+        
+        // Load a single page from Google Drive using file ID
+        async function loadPageFromGoogleDrive(pageNum, fileId) {
+            try {
+                console.log(`[loadPageFromGoogleDrive] Starting load for page ${pageNum}, file ID: ${fileId}`);
+                
+                // Create unique ID for this page instance
+                const uniqueId = `${pageNum}-${fileId}`;
+                
+                // Check if this exact page instance is already loaded
+                const existingPage = document.querySelector(`[data-unique-id="${uniqueId}"]`);
+                if (existingPage) {
+                    console.log(`[loadPageFromGoogleDrive] Page ${pageNum} with file ID ${fileId} already loaded, skipping`);
+                    return;
+                }
+                
+                // Double-check: Remove ANY existing page with the same page number (to prevent duplicates)
+                // This includes default pages and any previously loaded versions
+                const existingPagesByNumber = document.querySelectorAll(`.page-wrapper[data-page-id="${pageNum}"]`);
+                if (existingPagesByNumber.length > 0) {
+                    console.warn(`[loadPageFromGoogleDrive] Found ${existingPagesByNumber.length} existing page(s) with page number ${pageNum}, removing them`);
+                    existingPagesByNumber.forEach(page => {
+                        const existingUniqueId = page.getAttribute('data-unique-id');
+                        console.log(`  Removing page with unique-id: ${existingUniqueId || 'none'}`);
+                        page.remove();
+                    });
+                }
+                
+                // Use POST to download file
+                const pageResponse = await fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'cors',
+                    cache: 'no-store',
+                    headers: {
+                        'Content-Type': 'text/plain;charset=utf-8',
+                    },
+                    body: JSON.stringify({
+                        action: 'download',
+                        id: fileId
+                    })
+                });
+                
+                if (!pageResponse.ok) {
+                    const errorText = await pageResponse.text();
+                    console.error(`Failed to load page ${pageNum}:`, errorText);
+                    throw new Error(`Failed to load page ${pageNum}: ${pageResponse.statusText}`);
+                }
+                
+                const pageHTML = await pageResponse.text();
+                console.log(`Page ${pageNum} HTML received, length: ${pageHTML.length}`);
+                
+                // Calculate and store hash for duplicate detection
+                const contentHash = await calculateContentHash(pageHTML);
+                await storePageHash(fileId, pageNum, contentHash);
+                console.log(`[Load] Page ${pageNum} hash calculated and stored: ${contentHash.substring(0, 16)}...`);
+                
+                // Check if response is JSON error
+                if (pageHTML.trim().startsWith('{')) {
+                    try {
+                        const jsonResponse = JSON.parse(pageHTML);
+                        if (jsonResponse.status === 'error') {
+                            throw new Error(jsonResponse.data?.error || 'Error loading page');
+                        }
+                    } catch (e) {
+                        // Not JSON, continue
+                    }
+                }
+                
+                // Create a temporary container to parse the HTML
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = pageHTML;
+                
+                // Look for .newsletter-preview in the parsed HTML
+                // It might be in the body if it's a full HTML document
+                let pageElement = tempDiv.querySelector('.newsletter-preview');
+                
+                // If not found, try parsing as full HTML document
+                if (!pageElement) {
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(pageHTML, 'text/html');
+                    pageElement = doc.querySelector('.newsletter-preview');
+                }
+                
+                if (!pageElement) {
+                    console.error(`Page ${pageNum}: .newsletter-preview not found in HTML`);
+                    console.log('HTML preview:', pageHTML.substring(0, 500));
+                    return; // Skip this page
+                }
+                
+                console.log(`Page ${pageNum}: Found .newsletter-preview element`);
+                
+                // Ensure all editable elements have contenteditable attribute
+                // This is important because saved HTML might not have it
+                const editableSelectors = [
+                    '.editable',
+                    '.business-news-header',
+                    '.section-title',
+                    '.section-content',
+                    '.partnership-title',
+                    '.partnership-content',
+                    '.business-news-subtitle',
+                    '.business-news-content',
+                    '.key-events-title',
+                    '.newsletter-title-main',
+                    '.newsletter-title-sub',
+                    '.gallery-section-title',
+                    '.events-list-preview li'
+                ];
+                
+                editableSelectors.forEach(selector => {
+                    const elements = pageElement.querySelectorAll(selector);
+                    elements.forEach(el => {
+                        if (!el.hasAttribute('contenteditable')) {
+                            el.setAttribute('contenteditable', 'true');
+                            // Restore placeholder if it exists and element is empty
+                            const placeholder = el.getAttribute('data-placeholder');
+                            if (placeholder && !el.textContent.trim() && !el.innerHTML.trim()) {
+                                if (el.classList.contains('business-news-header')) {
+                                    // Special handling for multi-line placeholder
+                                    el.innerHTML = placeholder.replace(/&#10;/g, '<br>');
+                                } else {
+                                    el.textContent = placeholder.replace(/&#10;/g, '\n');
+                                }
+                            }
+                        }
+                    });
+                });
+                
+                console.log(`[Load] Page ${pageNum}: Ensured contenteditable attributes on all editable elements`);
+                
+                // Ensure editable-image elements are clickable
+                const editableImages = pageElement.querySelectorAll('.editable-image');
+                editableImages.forEach(img => {
+                    // Re-attach click handler if needed
+                    if (!img.onclick) {
+                        const isLogo = img.classList.contains('newsletter-logo');
+                        const isGallery = img.classList.contains('gallery-image-item');
+                        if (isLogo) {
+                            img.onclick = function(e) { changeImage(this, 'logo'); };
+                        } else if (isGallery) {
+                            img.onclick = function(e) {
+                                if (!e.target.closest('.gallery-btn-delete')) {
+                                    changeImage(this, 'gallery');
+                                }
+                            };
+                        } else {
+                            img.onclick = function(e) { changeImage(this, 'image'); };
+                        }
+                    }
+                });
+                
+                // Remove h1 from pages that are not page 1
+                if (pageNum !== 1) {
+                    const titleWrapper = pageElement.querySelector('.newsletter-title-wrapper');
+                    if (titleWrapper) {
+                        const h1Element = titleWrapper.querySelector('.newsletter-title-main');
+                        if (h1Element) {
+                            h1Element.remove();
+                            console.log(`Page ${pageNum}: Removed h1 element (only page 1 should have it)`);
+                        }
+                    }
+                }
+                
+                // Process images before adding to DOM (download and store in localStorage)
+                await processPageImages(pageElement);
+                
+                // Final check: Make sure no duplicate exists before adding
+                const finalCheck = document.querySelector(`.page-wrapper[data-page-id="${pageNum}"][data-unique-id="${uniqueId}"]`);
+                if (finalCheck) {
+                    console.warn(`[loadPageFromGoogleDrive] Duplicate detected! Page ${pageNum} with unique-id ${uniqueId} already exists, skipping add`);
+                    return;
+                }
+                
+                // Always add as new page instance
+                const pageWrapper = document.createElement('div');
+                pageWrapper.className = 'page-wrapper';
+                pageWrapper.setAttribute('data-page-id', pageNum);
+                pageWrapper.setAttribute('data-unique-id', uniqueId);
+                pageWrapper.setAttribute('data-file-id', fileId);
+                pageWrapper.innerHTML = `
+                    <div class="page-number">Page ${pageNum}</div>
+                    <div class="page-controls">
+                        <button class="btn-page-control btn-delete-page" data-unique-id="${uniqueId}" data-page-id="${pageNum}">🗑️ Delete</button>
+                    </div>
+                    ${pageElement.outerHTML}
+                `;
+                document.getElementById('pagesContainer').appendChild(pageWrapper);
+                pageCounter = Math.max(pageCounter, parseInt(pageNum));
+                
+                // Initialize editable elements for this newly loaded page
+                // Target only elements within this page wrapper to avoid conflicts
+                setTimeout(() => {
+                    // Remove data-initialized flags from this page's elements so they get initialized
+                    const pageEditableElements = pageWrapper.querySelectorAll('[contenteditable="true"]');
+                    pageEditableElements.forEach(el => {
+                        el.removeAttribute('data-initialized');
+                    });
+                    // Now initialize
+                    initializeEditableElements();
+                }, 100);
+                
+                // Verify only one page with this page number exists
+                const pagesWithSameNumber = document.querySelectorAll(`.page-wrapper[data-page-id="${pageNum}"]`);
+                if (pagesWithSameNumber.length > 1) {
+                    console.error(`[loadPageFromGoogleDrive] ERROR: After adding, found ${pagesWithSameNumber.length} pages with page number ${pageNum}!`);
+                    pagesWithSameNumber.forEach((p, idx) => {
+                        console.error(`  Page ${idx + 1}: unique-id="${p.getAttribute('data-unique-id')}"`);
+                    });
+                } else {
+                    console.log(`[loadPageFromGoogleDrive] Successfully added page ${pageNum} (unique-id: ${uniqueId})`);
+                }
+            } catch (error) {
+                console.error(`Error loading page ${pageNum} from Google Drive:`, error);
+                // Don't throw - continue loading other pages
+            }
+        }
+        
+        // Fallback: Load page via proxy or alternative method
+        async function loadPageViaProxy(pageNum, fileId) {
+            try {
+                // Try using Google Drive direct download URL
+                const directUrl = `https://drive.google.com/uc?export=download&id=${fileId}`;
+                
+                // Use a CORS proxy (you may want to use your own proxy)
+                const proxyUrl = `https://cors-anywhere.herokuapp.com/${GOOGLE_SCRIPT_URL}?action=download&id=${fileId}`;
+                
+                try {
+                    const response = await fetch(proxyUrl);
+                    if (response.ok) {
+                        const pageHTML = await response.text();
+                        // Process the HTML same as above
+                        const tempDiv = document.createElement('div');
+                        tempDiv.innerHTML = pageHTML;
+                        const pageElement = tempDiv.querySelector('.newsletter-preview');
+                        
+                        if (pageElement) {
+                            // Create unique ID for this page instance
+                            const uniqueId = `${pageNum}-${fileId}`;
+                            
+                            // Check if this page instance is already loaded
+                            const existingPage = document.querySelector(`[data-unique-id="${uniqueId}"]`);
+                            if (existingPage) {
+                                console.log(`Page ${pageNum} with file ID ${fileId} already loaded, skipping`);
+                                return;
+                            }
+                            
+                            // Always add as new page instance
+                            const pageWrapper = document.createElement('div');
+                            pageWrapper.className = 'page-wrapper';
+                            pageWrapper.setAttribute('data-page-id', pageNum);
+                            pageWrapper.setAttribute('data-unique-id', uniqueId);
+                            pageWrapper.setAttribute('data-file-id', fileId);
+                            pageWrapper.innerHTML = `
+                                <div class="page-number">Page ${pageNum}</div>
+                                <div class="page-controls">
+                                    <button class="btn-page-control btn-delete-page" data-unique-id="${uniqueId}" data-page-id="${pageNum}">🗑️ Delete</button>
+                                </div>
+                                ${pageElement.outerHTML}
+                            `;
+                            document.getElementById('pagesContainer').appendChild(pageWrapper);
+                            pageCounter = Math.max(pageCounter, parseInt(pageNum));
+                            initializeEditableElements();
+                            updatePageNumbers();
+                        }
+                    }
+                } catch (error) {
+                    console.error(`Proxy load failed for page ${pageNum}:`, error);
+                }
+            } catch (error) {
+                console.error(`Error in loadPageViaProxy for page ${pageNum}:`, error);
+            }
+        }
+
+        // Delete gallery image - define first
+        window.deleteGalleryImage = function(button) {
+            if (!button) return;
+            const imageItem = button.closest('.gallery-image-item');
+            if (!imageItem) return;
+            const galleryContainer = imageItem.parentElement;
+            const pagePreview = imageItem.closest('.newsletter-preview');
+            imageItem.remove();
+            
+            // If no images left, add one back
+            if (galleryContainer.querySelectorAll('.gallery-image-item').length === 0) {
+                const newImageItem = document.createElement('div');
+                newImageItem.className = 'gallery-image-item editable-image';
+                newImageItem.onclick = function(e) {
+                    if (!e.target.closest('.gallery-btn-delete')) {
+                        changeImage(this, 'gallery');
+                    }
+                };
+                newImageItem.innerHTML = `
+                    <input type="file" accept="image/*" class="image-upload-input" onchange="handleImageUpload(event, this.parentElement)">
+                    <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: #e5e7eb; color: #666; font-size: 12px;">Click to add image</div>
+                    <div class="gallery-image-controls">
+                        <button class="gallery-btn gallery-btn-delete" data-action="delete-image" title="Delete image">×</button>
+                    </div>
+                `;
+                galleryContainer.appendChild(newImageItem);
+            }
+            
+            // Update add button position and show if under max
+            const addButton = galleryContainer.querySelector('.gallery-add-image-btn');
+            if (addButton) {
+                setTimeout(() => {
+                    updateAddButtonPosition(addButton, galleryContainer);
+                    const currentCount = galleryContainer.querySelectorAll('.gallery-image-item').length;
+                    if (currentCount < 6) {
+                        addButton.style.display = 'inline-flex';
+                    }
+                    // Update page height
+                    if (pagePreview) {
+                        updateGalleryPageHeight(pagePreview);
+                    }
+                }, 10);
+            }
+        };
+
+        // Delete page - soft delete implementation
+        window.deletePage = function(pageId, uniqueId) {
+            if (!pageId) return;
+            
+            // Use uniqueId if provided, otherwise try to find it
+            let targetUniqueId = uniqueId;
+            if (!targetUniqueId) {
+                const pageWrapper = document.querySelector(`[data-page-id="${pageId}"]`);
+                if (pageWrapper) {
+                    targetUniqueId = pageWrapper.getAttribute('data-unique-id');
+                }
+            }
+            
+            if (!targetUniqueId) {
+                console.error('Cannot delete page: unique ID not found');
+                return;
+            }
+            
+            // Get current deleted page IDs from localStorage
+            const deletedPageIds = JSON.parse(localStorage.getItem('deletedPageIds') || '[]');
+            
+            // Add this page's unique ID to deleted list
+            if (!deletedPageIds.includes(targetUniqueId)) {
+                deletedPageIds.push(targetUniqueId);
+                localStorage.setItem('deletedPageIds', JSON.stringify(deletedPageIds));
+            }
+            
+            // Hide the page in UI (soft delete - don't remove from DOM, just hide)
+            const pageWrapper = document.querySelector(`[data-unique-id="${targetUniqueId}"]`);
+            if (pageWrapper) {
+                pageWrapper.style.display = 'none';
+                console.log(`Page ${targetUniqueId} marked as deleted (soft delete)`);
+            }
+            
+            // Update page numbers for visible pages
+            updatePageNumbers();
+        };
+
+        // Initialize first page
+        initializeEditableElements();
+        
+        // Initialize IndexedDB on page load
+        initImageDB().then(() => {
+            console.log('IndexedDB initialized for image storage');
+        }).catch(err => {
+            console.warn('IndexedDB initialization failed, will use localStorage only:', err);
+        });
+        
+        // Load saved pages on page load
+        window.addEventListener('DOMContentLoaded', function() {
+            loadSavedPages();
+        });
+        
+        // Also try loading if DOMContentLoaded already fired
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', loadSavedPages);
+        } else {
+            // DOM already loaded
+            setTimeout(loadSavedPages, 500);
+        }
+        
+        // Use event delegation for delete buttons
+        document.addEventListener('click', function(e) {
+            // Handle delete image button - check if clicked element or parent is the button
+            const deleteImageBtn = e.target.closest('.gallery-btn-delete');
+            if (deleteImageBtn) {
+                e.stopPropagation();
+                e.preventDefault();
+                window.deleteGalleryImage(deleteImageBtn);
+                return;
+            }
+            
+            // Handle delete page button - check if clicked element or parent is the button
+            const deletePageBtn = e.target.closest('.btn-delete-page');
+            if (deletePageBtn) {
+                e.preventDefault();
+                e.stopPropagation();
+                const pageId = parseInt(deletePageBtn.getAttribute('data-page-id'));
+                const uniqueId = deletePageBtn.getAttribute('data-unique-id');
+                if (pageId && uniqueId) {
+                    window.deletePage(pageId, uniqueId);
+                }
+                return;
+            }
+        });
+
+        // Handle image uploads
+        function changeImage(element, type) {
+            const pageElement = element.closest('.newsletter-preview');
+            const input = element.querySelector('input[type="file"]');
+            if (input) {
+                input.click();
+            } else {
+                const fileInput = document.createElement('input');
+                fileInput.type = 'file';
+                fileInput.accept = 'image/*';
+                fileInput.onchange = (e) => handleImageUpload(e, element, pageElement);
+                fileInput.click();
+            }
+        }
+
+        async function handleImageUpload(event, element, pageElement) {
+            const file = event.target.files[0];
+            if (file) {
+                // Show loading state
+                const loadingText = element.querySelector('span') || element;
+                if (loadingText) {
+                    const originalText = loadingText.textContent;
+                    loadingText.textContent = 'Uploading...';
+                }
+                
+                try {
+                    // First, convert file to data URL for immediate display
+                    const localDataUrl = await new Promise((resolve, reject) => {
+                        const reader = new FileReader();
+                        reader.onload = () => resolve(reader.result);
+                        reader.onerror = reject;
+                        reader.readAsDataURL(file);
+                    });
+                    
+                    // Now upload to Google Drive first to get file ID
+                    const timestamp = Date.now();
+                    const fileExt = file.name.substring(file.name.lastIndexOf('.')) || '.jpg';
+                    const filename = `images/img-${timestamp}${fileExt}`;
+                    const availableFilename = await getAvailableFilename(filename);
+                    
+                    // Upload to Google Drive
+                    const uploadResult = await uploadToGoogleDrive(file, availableFilename);
+                    
+                    // Get file ID if available
+                    let fileId = null;
+                    if (uploadResult && typeof uploadResult === 'object' && uploadResult.id) {
+                        fileId = uploadResult.id;
+                    }
+                    
+                    // Display image immediately from local file
+                    const img = element.querySelector('img');
+                    if (img) {
+                        img.src = localDataUrl;
+                        // Set file ID on image if we have it
+                        if (fileId) {
+                            img.setAttribute('data-file-id', fileId);
+                        }
+                    } else {
+                        // Replace placeholder with image
+                        const isLogo = element.classList.contains('newsletter-logo');
+                        const isGallery = element.classList.contains('gallery-image-item');
+                        
+                        if (isLogo) {
+                            element.innerHTML = `
+                                <input type="file" accept="image/*" class="image-upload-input" onchange="handleImageUpload(event, this.parentElement)">
+                                <img src="${localDataUrl}" alt="Logo" ${fileId ? `data-file-id="${fileId}"` : ''} />
+                            `;
+                            element.onclick = function(e) {
+                                changeImage(this, 'logo');
+                            };
+                        } else if (isGallery) {
+                            element.innerHTML = `
+                                <input type="file" accept="image/*" class="image-upload-input">
+                                <img src="${localDataUrl}" alt="Image" ${fileId ? `data-file-id="${fileId}"` : ''} />
+                                <div class="gallery-image-controls">
+                                    <button class="gallery-btn gallery-btn-delete" title="Delete image">×</button>
+                                </div>
+                            `;
+                            element.onclick = function(e) {
+                                if (!e.target.closest('.gallery-btn-delete')) {
+                                    changeImage(this, 'gallery');
+                                }
+                            };
+                            const deleteBtn = element.querySelector('.gallery-btn-delete');
+                            if (deleteBtn) {
+                                deleteBtn.addEventListener('click', function(e) {
+                                    e.stopPropagation();
+                                    e.preventDefault();
+                                    window.deleteGalleryImage(this);
+                                });
+                            }
+                        } else {
+                            element.innerHTML = `<img src="${localDataUrl}" alt="Image" ${fileId ? `data-file-id="${fileId}"` : ''} />`;
+                        }
+                    }
+                    
+                    // If upload succeeded and we have a file ID, store in localStorage
+                    if (fileId) {
+                        // Store the local data URL immediately (don't wait for download)
+                        await storeImageInLocalStorage(fileId, localDataUrl);
+                        
+                        // Store file ID on the element as well for reference
+                        element.setAttribute('data-file-id', fileId);
+                        
+                        // Ensure image has the file ID (in case it was created before we had the ID)
+                        const currentImg = element.querySelector('img');
+                        if (currentImg && !currentImg.getAttribute('data-file-id')) {
+                            currentImg.setAttribute('data-file-id', fileId);
+                        }
+                        
+                        // Also download from Google Drive to ensure we have the latest version
+                        // This runs in background, doesn't block UI
+                        downloadAndStoreImage(fileId).then(async (downloadedUrl) => {
+                            if (downloadedUrl && downloadedUrl !== localDataUrl) {
+                                // Update storage with downloaded version
+                                await storeImageInLocalStorage(fileId, downloadedUrl);
+                                // Update image src if it's still using the same file
+                                const img = element.querySelector('img');
+                                if (img && img.src === localDataUrl) {
+                                    img.src = downloadedUrl;
+                                    // Ensure file ID is still set
+                                    img.setAttribute('data-file-id', fileId);
+                                }
+                            }
+                        }).catch(err => {
+                            console.error('Background download failed, using local version:', err);
+                        });
+                    } else if (typeof uploadResult === 'string') {
+                        // Fallback: it's already a data URL
+                        await storeImageInLocalStorage(`local_${timestamp}`, uploadResult);
+                    }
+                    
+                    // Ensure delete button exists for gallery images
+                    if (element.classList.contains('gallery-image-item') && !element.querySelector('.gallery-image-controls')) {
+                        const controls = document.createElement('div');
+                        controls.className = 'gallery-image-controls';
+                        const deleteBtn = document.createElement('button');
+                        deleteBtn.className = 'gallery-btn gallery-btn-delete';
+                        deleteBtn.textContent = '×';
+                        deleteBtn.title = 'Delete image';
+                        deleteBtn.addEventListener('click', function(e) {
+                            e.stopPropagation();
+                            e.preventDefault();
+                            window.deleteGalleryImage(this);
+                        });
+                        controls.appendChild(deleteBtn);
+                        element.appendChild(controls);
+                    }
+                    
+                    // Update page height after image upload (for gallery pages)
+                    if (element.classList.contains('gallery-image-item')) {
+                            setTimeout(() => {
+                                const pagePreview = element.closest('.newsletter-preview');
+                                if (pagePreview) {
+                                    updateGalleryPageHeight(pagePreview);
+                                }
+                            }, 100);
+                    }
+                } catch (error) {
+                    console.error('Error uploading image:', error);
+                    // Fallback to data URL
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const imageUrl = e.target.result;
+                        const img = element.querySelector('img');
+                        if (img) {
+                            img.src = imageUrl;
+                        } else {
+                            element.innerHTML = `<img src="${imageUrl}" alt="Image" />`;
+                        }
+                    };
+                    reader.readAsDataURL(file);
+                }
+            }
+        }
+
+        // Add new page
+        function addNewPage() {
+            pageCounter++;
+            const isEvenPage = pageCounter % 2 === 0;
+            const pageType = isEvenPage ? 'gallery' : 'content';
+            
+            const pagesContainer = document.getElementById('pagesContainer');
+            const pageWrapper = document.createElement('div');
+            pageWrapper.className = 'page-wrapper';
+            pageWrapper.setAttribute('data-page-id', pageCounter);
+
+            let pageContent = '';
+            
+            if (isEvenPage) {
+                // Gallery page
+                pageContent = createGalleryPage();
+            } else {
+                // For odd pages, use exact page 1 layout
+                pageContent = createPage1ExactLayout();
+            }
+
+            pageWrapper.innerHTML = `
+                <div class="page-number">Page ${pageCounter}</div>
+                <div class="page-controls">
+                    <button class="btn-page-control btn-delete-page" data-page-id="${pageCounter}">🗑️ Delete</button>
+                </div>
+                ${pageContent}
+            `;
+
+            pagesContainer.appendChild(pageWrapper);
+            initializeEditableElements();
+            
+            // Update gallery page height if it's a gallery page
+            if (isEvenPage) {
+                setTimeout(() => {
+                    const pagePreview = pageWrapper.querySelector('.newsletter-preview[data-page-type="gallery"]');
+                    if (pagePreview) {
+                        updateGalleryPageHeight(pagePreview);
+                    }
+                }, 100);
+            }
+        }
+
+        // Create gallery page
+        function createGalleryPage() {
+            return `
+                <div class="newsletter-preview" data-page-type="gallery">
+                    <div class="decorative-line-vertical"></div>
+                    
+                    <div class="newsletter-header">
+                        <div class="newsletter-title-wrapper">
+                            <h2 class="newsletter-title-sub editable" contenteditable="true" data-placeholder="COMPANY">COMPANY</h2>
+                            <div class="decorative-line-horizontal-title"></div>
+                        </div>
+                    </div>
+
+                    <div class="gallery-page">
+                        <div class="gallery-section">
+                            <h2 class="gallery-section-title editable" contenteditable="true" data-placeholder="BEFORE">BEFORE</h2>
+                            <div class="gallery-images" data-gallery-section="before">
+                                <div class="gallery-image-item editable-image" onclick="if(!event.target.closest('.gallery-btn-delete')) changeImage(this, 'gallery')">
+                                    <input type="file" accept="image/*" class="image-upload-input" onchange="handleImageUpload(event, this.parentElement)">
+                                    <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: #e5e7eb; color: #666; font-size: 12px;">Click to add image</div>
+                                    <div class="gallery-image-controls">
+                                        <button class="gallery-btn gallery-btn-delete" data-action="delete-image" title="Delete image">×</button>
+                                    </div>
+                                </div>
+                                <button class="gallery-add-image-btn" onclick="window.addGalleryImage('before', this)" title="Add image">+</button>
+                            </div>
+                        </div>
+                        <div class="gallery-section">
+                            <h2 class="gallery-section-title editable" contenteditable="true" data-placeholder="AFTER">AFTER</h2>
+                            <div class="gallery-images" data-gallery-section="after">
+                                <div class="gallery-image-item editable-image" onclick="if(!event.target.closest('.gallery-btn-delete')) changeImage(this, 'gallery')">
+                                    <input type="file" accept="image/*" class="image-upload-input" onchange="handleImageUpload(event, this.parentElement)">
+                                    <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: #e5e7eb; color: #666; font-size: 12px;">Click to add image</div>
+                                    <div class="gallery-image-controls">
+                                        <button class="gallery-btn gallery-btn-delete" data-action="delete-image" title="Delete image">×</button>
+                                    </div>
+                                </div>
+                                <button class="gallery-add-image-btn" onclick="window.addGalleryImage('after', this)" title="Add image">+</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Add gallery image
+        window.addGalleryImage = function(section, button) {
+            const galleryContainer = button.parentElement;
+            const currentImages = galleryContainer.querySelectorAll('.gallery-image-item').length;
+            
+            if (currentImages >= 6) {
+                alert('Maximum 6 images allowed per section');
+                return;
+            }
+            
+            const newImageItem = document.createElement('div');
+            newImageItem.className = 'gallery-image-item editable-image';
+            newImageItem.onclick = function(e) {
+                if (!e.target.closest('.gallery-btn-delete')) {
+                    changeImage(this, 'gallery');
+                }
+            };
+            newImageItem.innerHTML = `
+                <input type="file" accept="image/*" class="image-upload-input" onchange="handleImageUpload(event, this.parentElement)">
+                <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: #e5e7eb; color: #666; font-size: 12px;">Click to add image</div>
+                <div class="gallery-image-controls">
+                    <button class="gallery-btn gallery-btn-delete" data-action="delete-image" title="Delete image">×</button>
+                </div>
+            `;
+            galleryContainer.appendChild(newImageItem);
+            
+            // Update add button position and hide if max reached
+            const pagePreview = galleryContainer.closest('.newsletter-preview');
+            setTimeout(() => {
+                updateAddButtonPosition(button, galleryContainer);
+                const currentCount = galleryContainer.querySelectorAll('.gallery-image-item').length;
+                if (currentCount >= 6) {
+                    button.style.display = 'none';
+                } else {
+                    button.style.display = 'inline-flex';
+                }
+                // Update page height
+                if (pagePreview) {
+                    updateGalleryPageHeight(pagePreview);
+                }
+            }, 10);
+        };
+
+
+        // Update add button position
+        function updateAddButtonPosition(button, galleryContainer) {
+            if (!button || !galleryContainer) return;
+            const images = galleryContainer.querySelectorAll('.gallery-image-item');
+            if (images.length > 0) {
+                // Position button next to first image
+                button.style.position = 'absolute';
+                button.style.top = '50%';
+                button.style.right = '10px';
+                button.style.transform = 'translateY(-50%)';
+            }
+        }
+
+        // Update gallery page height based on content
+        function updateGalleryPageHeight(pagePreview) {
+            if (!pagePreview || pagePreview.getAttribute('data-page-type') !== 'gallery') return;
+            
+            // Calculate the actual content height
+            const galleryPage = pagePreview.querySelector('.gallery-page');
+            if (galleryPage) {
+                const contentHeight = galleryPage.scrollHeight;
+                const headerHeight = pagePreview.querySelector('.newsletter-header')?.offsetHeight || 200;
+                const totalHeight = headerHeight + contentHeight + 100; // Add some padding
+                
+                // Set minimum height but allow expansion
+                pagePreview.style.minHeight = Math.max(1122.52, totalHeight) + 'px';
+                
+                // Update background image height
+                const bgBefore = pagePreview.querySelector('::before');
+                if (pagePreview.style) {
+                    // Update the background pseudo-element by updating the container
+                    const bgElement = pagePreview;
+                    if (bgElement) {
+                        // The ::before pseudo-element will automatically adjust with the parent
+                    }
+                }
+            }
+        }
+        
+        // Initialize add button positions and page heights on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(function() {
+                document.querySelectorAll('.gallery-add-image-btn').forEach(function(button) {
+                    const galleryContainer = button.parentElement;
+                    if (galleryContainer) {
+                        updateAddButtonPosition(button, galleryContainer);
+                    }
+                });
+                // Update heights for all gallery pages
+                document.querySelectorAll('.newsletter-preview[data-page-type="gallery"]').forEach(function(page) {
+                    updateGalleryPageHeight(page);
+                });
+            }, 100);
+        });
+
+        // Create exact page 1 layout
+        function createPage1ExactLayout() {
+            return `
+                <div class="newsletter-preview" data-page-type="content">
+                    <div class="decorative-line-vertical"></div>
+                    
+                    <div class="newsletter-content" style="padding-top: 40px;">
+                        <div class="newsletter-left-column">
+                            <div style="margin-top: 20px;">
+                                <h2 class="section-title editable" contenteditable="true" data-placeholder="THIS WEEK'S REPORT">THIS WEEK'S REPORT</h2>
+                                <p class="section-content editable" contenteditable="true" data-placeholder="Enter this week's report...">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed mauris mi, sodales sed scelerisque ac, aliquet at tortor. Sed vitae ullamcorper leo. Nunc condimentum, augue sed finibus scelerisque, augue nulla faucibus nisi, a tristique augue felis at est.</p>
+                            </div>
+
+                            <div class="newsletter-image-main editable-image" onclick="changeImage(this, 'main')">
+                                <input type="file" accept="image/*" class="image-upload-input">
+                                <img src="https://media-public.canva.com/MlWuo/MADyQ_MlWuo/1/s.jpg" alt="Photo Of People Having Discussion" />
+                            </div>
+
+                            <div style="margin-top: 20px;">
+                                <h2 class="partnership-title editable" contenteditable="true" data-placeholder="THE DISCUSSION ABOUT PARTNERSHIP">THE DISCUSSION ABOUT PARTNERSHIP</h2>
+                                <p class="partnership-content editable" contenteditable="true" data-placeholder="Enter partnership content...">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed mauris mi, sodales sed scelerisque ac, aliquet at tortor. Sed vitae ullamcorper leo. Nunc condimentum, augue sed finibus scelerisque, augue nulla faucibus nisi, a tristique augue felis at est.</p>
+                            </div>
+
+                            <div class="newsletter-image-bottom editable-image" onclick="changeImage(this, 'bottom')">
+                                <input type="file" accept="image/*" class="image-upload-input">
+                                <img src="https://media-public.canva.com/MADGv-Z47yI/7/screen.jpg" alt="People Sitting on Chairs Beside their Desks in an office" />
+                            </div>
+                        </div>
+
+                        <div class="newsletter-right-column">
+                            <div style="margin-top: 20px;">
+                                <h2 class="business-news-header editable" contenteditable="true" data-placeholder="INGOUDE&#10;BUSINESS&#10;NEWS">INGOUDE<br>BUSINESS<br>NEWS</h2>
+                                <h3 class="business-news-subtitle editable" contenteditable="true" data-placeholder="2023-2024">2023-2024</h3>
+                                <p class="business-news-content editable" contenteditable="true" data-placeholder="Enter business news...">Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+                            </div>
+
+                            <div style="margin-top: 60px;">
+                                <h2 class="key-events-title editable" contenteditable="true" data-placeholder="KEY EVENTS">KEY EVENTS</h2>
+                                <p class="section-content editable" contenteditable="true" data-placeholder="Enter event description..." style="margin-bottom: 10px;">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed mauris mi, sodales sed scelerisque ac, aliquet at tortor.</p>
+                                <ul class="events-list-preview">
+                                    <li contenteditable="true" class="editable" data-placeholder="Event item 1">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed mauris mi, sodales sed scelerisque ac, aliquet at tortor.</li>
+                                    <li contenteditable="true" class="editable" data-placeholder="Event item 2">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed mauris mi, sodales sed scelerisque ac, aliquet at tortor.</li>
+                                    <li contenteditable="true" class="editable" data-placeholder="Event item 3">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed mauris mi, sodales sed scelerisque ac, aliquet at tortor.</li>
+                                </ul>
+                                <button class="add-event-btn" onclick="addEventItem()">+ Add Event</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Create page with page 1 style elements but random placement (deprecated)
+        function createPage1StyleContent() {
+            // Get page 1 elements structure
+            const page1Elements = [
+                { type: 'section', title: "THIS WEEK'S REPORT", content: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed mauris mi, sodales sed scelerisque ac, aliquet at tortor. Sed vitae ullamcorper leo. Nunc condimentum, augue sed finibus scelerisque, augue nulla faucibus nisi, a tristique augue felis at est." },
+                { type: 'image', size: 'main', src: 'https://media-public.canva.com/MlWuo/MADyQ_MlWuo/1/s.jpg' },
+                { type: 'section', title: "THE DISCUSSION ABOUT PARTNERSHIP", content: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed mauris mi, sodales sed scelerisque ac, aliquet at tortor. Sed vitae ullamcorper leo. Nunc condimentum, augue sed finibus scelerisque, augue nulla faucibus nisi, a tristique augue felis at est." },
+                { type: 'image', size: 'bottom', src: 'https://media-public.canva.com/MADGv-Z47yI/7/screen.jpg' },
+                { type: 'section', title: "INGOUDE BUSINESS NEWS", subtitle: "2023-2024", content: "Lorem ipsum dolor sit amet, consectetur adipiscing elit." },
+                { type: 'section', title: "KEY EVENTS", content: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed mauris mi, sodales sed scelerisque ac, aliquet at tortor.", events: [
+                    "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed mauris mi, sodales sed scelerisque ac, aliquet at tortor.",
+                    "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed mauris mi, sodales sed scelerisque ac, aliquet at tortor.",
+                    "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed mauris mi, sodales sed scelerisque ac, aliquet at tortor."
+                ]}
+            ];
+
+            // Randomize order
+            const shuffledElements = page1Elements.sort(() => Math.random() - 0.5);
+            
+            // Randomly choose layout
+            const layoutTypes = ['two-column', 'single-column', 'three-column'];
+            const randomLayout = layoutTypes[Math.floor(Math.random() * layoutTypes.length)];
+            
+            let leftColumn = '';
+            let rightColumn = '';
+            let singleColumn = '';
+            
+            shuffledElements.forEach((element, index) => {
+                const elementHTML = createPage1ElementHTML(element);
+                
+                if (randomLayout === 'two-column') {
+                    if (index % 2 === 0) {
+                        leftColumn += elementHTML;
+                    } else {
+                        rightColumn += elementHTML;
+                    }
+                } else if (randomLayout === 'three-column') {
+                    if (index % 3 === 0) {
+                        leftColumn += elementHTML;
+                    } else if (index % 3 === 1) {
+                        rightColumn += elementHTML;
+                    } else {
+                        singleColumn += elementHTML;
+                    }
+                } else {
+                    singleColumn += elementHTML;
+                }
+            });
+
+            let layoutHTML = '';
+            if (randomLayout === 'two-column') {
+                layoutHTML = `
+                    <div class="newsletter-left-column">${leftColumn}</div>
+                    <div class="newsletter-right-column">${rightColumn}</div>
+                `;
+            } else if (randomLayout === 'three-column') {
+                layoutHTML = `
+                    <div class="newsletter-left-column">${leftColumn}</div>
+                    <div class="newsletter-right-column">${rightColumn}</div>
+                    <div>${singleColumn}</div>
+                `;
+            } else {
+                layoutHTML = `<div class="layout-single-column">${singleColumn}</div>`;
+            }
+
+            return `
+                <div class="newsletter-preview" data-page-type="content">
+                    <div class="decorative-line-vertical"></div>
+                    
+                    <div class="newsletter-header">
+                        <div class="newsletter-logo editable-image" onclick="changeImage(this, 'logo')">
+                            <input type="file" accept="image/*" class="image-upload-input" onchange="handleImageUpload(event, this.parentElement)">
+                            <img src="assets/images/TAAOWA-logo-new-transperent-bg.png" alt="Logo" />
+                        </div>
+                        <div class="newsletter-title-wrapper">
+                            <h2 class="newsletter-title-sub editable" contenteditable="true" data-placeholder="COMPANY">COMPANY</h2>
+                            <div class="decorative-line-horizontal-title"></div>
+                        </div>
+                    </div>
+
+                    <div class="newsletter-content" style="display: grid; grid-template-columns: ${randomLayout === 'three-column' ? '1fr 1fr 1fr' : randomLayout === 'two-column' ? '1fr 1fr' : '1fr'}; gap: 40px; padding: 0 46px;">
+                        ${layoutHTML}
+                    </div>
+                </div>
+            `;
+        }
+
+        // Create HTML for page 1 style elements
+        function createPage1ElementHTML(element) {
+            if (element.type === 'section') {
+                if (element.events) {
+                    const eventsHTML = element.events.map(event => 
+                        `<li contenteditable="true" class="editable" data-placeholder="Event item">${event}</li>`
+                    ).join('');
+                    return `
+                        <div style="margin-top: 20px;">
+                            <h2 class="key-events-title editable" contenteditable="true" data-placeholder="${element.title}">${element.title}</h2>
+                            <ul class="events-list-preview">${eventsHTML}</ul>
+                            <button class="add-event-btn" onclick="addEventItem()">+ Add Event</button>
+                        </div>
+                    `;
+                } else if (element.subtitle) {
+                    return `
+                        <div style="margin-top: 20px;">
+                            <h2 class="business-news-header editable" contenteditable="true" data-placeholder="${element.title}">${element.title}</h2>
+                            <h3 class="business-news-subtitle editable" contenteditable="true" data-placeholder="${element.subtitle}">${element.subtitle}</h3>
+                            <p class="business-news-content editable" contenteditable="true" data-placeholder="${element.content}">${element.content}</p>
+                        </div>
+                    `;
+                } else {
+                    const isPartnership = element.title.includes('PARTNERSHIP');
+                    return `
+                        <div style="margin-top: 20px;">
+                            <h2 class="${isPartnership ? 'partnership-title' : 'section-title'} editable" contenteditable="true" data-placeholder="${element.title}">${element.title}</h2>
+                            <p class="${isPartnership ? 'partnership-content' : 'section-content'} editable" contenteditable="true" data-placeholder="${element.content}">${element.content}</p>
+                        </div>
+                    `;
+                }
+            } else if (element.type === 'image') {
+                const imageClass = element.size === 'main' ? 'newsletter-image-main' : 'newsletter-image-bottom';
+                return `
+                    <div class="${imageClass} editable-image" onclick="changeImage(this, '${element.size}')" style="margin: 20px 0;">
+                        <input type="file" accept="image/*" class="image-upload-input">
+                        <img src="${element.src}" alt="Image" />
+                    </div>
+                `;
+            }
+            return '';
+        }
+
+        // Create content page with random layout
+        function createContentPage(layoutType) {
+            const layoutClass = `layout-${layoutType}`;
+            const contentSections = [
+                { title: 'FEATURED STORY', content: 'Enter your featured story content here...' },
+                { title: 'LATEST UPDATES', content: 'Enter your latest updates here...' },
+                { title: 'ANNOUNCEMENTS', content: 'Enter your announcements here...' },
+                { title: 'COMMUNITY NEWS', content: 'Enter your community news here...' },
+                { title: 'UPCOMING EVENTS', content: 'Enter your upcoming events here...' }
+            ];
+
+            const randomSections = contentSections.sort(() => 0.5 - Math.random()).slice(0, 3);
+            
+            let layoutHTML = '';
+            
+            if (layoutType === 'single-column') {
+                layoutHTML = randomSections.map(section => `
+                    <div style="margin-top: 20px;">
+                        <h2 class="section-title editable" contenteditable="true" data-placeholder="${section.title}">${section.title}</h2>
+                        <p class="section-content editable" contenteditable="true" data-placeholder="${section.content}">${section.content}</p>
+                    </div>
+                `).join('');
+            } else if (layoutType === 'two-column') {
+                layoutHTML = `
+                    <div class="newsletter-left-column">
+                        <div style="margin-top: 20px;">
+                            <h2 class="section-title editable" contenteditable="true" data-placeholder="${randomSections[0].title}">${randomSections[0].title}</h2>
+                            <p class="section-content editable" contenteditable="true" data-placeholder="${randomSections[0].content}">${randomSections[0].content}</p>
+                        </div>
+                        <div class="newsletter-image-main editable-image" onclick="changeImage(this, 'main')">
+                            <input type="file" accept="image/*" class="image-upload-input">
+                            <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: #e5e7eb; color: #666;">Click to add image</div>
+                        </div>
+                    </div>
+                    <div class="newsletter-right-column">
+                        <div style="margin-top: 20px;">
+                            <h2 class="section-title editable" contenteditable="true" data-placeholder="${randomSections[1]?.title || 'SECTION TITLE'}">${randomSections[1]?.title || 'SECTION TITLE'}</h2>
+                            <p class="section-content editable" contenteditable="true" data-placeholder="${randomSections[1]?.content || 'Enter content...'}">${randomSections[1]?.content || 'Enter content...'}</p>
+                        </div>
+                    </div>
+                `;
+            } else if (layoutType === 'three-column') {
+                layoutHTML = randomSections.slice(0, 3).map(section => `
+                    <div style="margin-top: 20px;">
+                        <h2 class="section-title editable" contenteditable="true" data-placeholder="${section.title}">${section.title}</h2>
+                        <p class="section-content editable" contenteditable="true" data-placeholder="${section.content}">${section.content}</p>
+                    </div>
+                `).join('');
+            } else if (layoutType === 'image-left') {
+                layoutHTML = `
+                    <div class="newsletter-image-main editable-image" onclick="changeImage(this, 'main')" style="width: 100%; height: 300px;">
+                        <input type="file" accept="image/*" class="image-upload-input">
+                        <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: #e5e7eb; color: #666;">Click to add image</div>
+                    </div>
+                    <div>
+                        <h2 class="section-title editable" contenteditable="true" data-placeholder="${randomSections[0].title}">${randomSections[0].title}</h2>
+                        <p class="section-content editable" contenteditable="true" data-placeholder="${randomSections[0].content}">${randomSections[0].content}</p>
+                    </div>
+                `;
+            } else if (layoutType === 'image-right') {
+                layoutHTML = `
+                    <div>
+                        <h2 class="section-title editable" contenteditable="true" data-placeholder="${randomSections[0].title}">${randomSections[0].title}</h2>
+                        <p class="section-content editable" contenteditable="true" data-placeholder="${randomSections[0].content}">${randomSections[0].content}</p>
+                    </div>
+                    <div class="newsletter-image-main editable-image" onclick="changeImage(this, 'main')" style="width: 100%; height: 300px;">
+                        <input type="file" accept="image/*" class="image-upload-input">
+                        <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: #e5e7eb; color: #666;">Click to add image</div>
+                    </div>
+                `;
+            }
+
+            return `
+                <div class="newsletter-preview" data-page-type="content">
+                    <div class="decorative-line-vertical"></div>
+                    
+                    <div class="newsletter-header">
+                        <div class="newsletter-logo editable-image" onclick="changeImage(this, 'logo')">
+                            <input type="file" accept="image/*" class="image-upload-input" onchange="handleImageUpload(event, this.parentElement)">
+                            <img src="assets/images/TAAOWA-logo-new-transperent-bg.png" alt="Logo" />
+                        </div>
+                        <div class="newsletter-title-wrapper">
+                            <h2 class="newsletter-title-sub editable" contenteditable="true" data-placeholder="COMPANY">COMPANY</h2>
+                            <div class="decorative-line-horizontal-title"></div>
+                        </div>
+                    </div>
+
+                    <div class="${layoutClass}">
+                        ${layoutHTML}
+                    </div>
+                </div>
+            `;
+        }
+
+
+        // Update page numbers after deletion
+        function updatePageNumbers() {
+            // Only count visible (non-deleted) pages
+            const pages = Array.from(document.querySelectorAll('.page-wrapper'))
+                .filter(page => page.style.display !== 'none');
+            
+            pages.forEach((page, index) => {
+                const pageNumber = page.querySelector('.page-number');
+                const pageId = index + 1;
+                const originalPageId = page.getAttribute('data-page-id') || pageId;
+                const uniqueId = page.getAttribute('data-unique-id');
+                
+                // Keep original page ID and unique ID, but update display number
+                page.setAttribute('data-page-id', originalPageId);
+                if (uniqueId) {
+                    page.setAttribute('data-unique-id', uniqueId);
+                }
+                pageNumber.textContent = `Page ${pageId}`;
+                const deleteBtn = page.querySelector('.btn-delete-page');
+                if (deleteBtn) {
+                    deleteBtn.setAttribute('data-page-id', originalPageId);
+                    if (uniqueId) {
+                        deleteBtn.setAttribute('data-unique-id', uniqueId);
+                    }
+                    // Remove old listeners and add new one
+                    const newDeleteBtn = deleteBtn.cloneNode(true);
+                    deleteBtn.parentNode.replaceChild(newDeleteBtn, deleteBtn);
+                    newDeleteBtn.addEventListener('click', function() {
+                        const id = parseInt(this.getAttribute('data-page-id'));
+                        const uid = this.getAttribute('data-unique-id');
+                        window.deletePage(id, uid);
+                    });
+                    // Hide delete button for page 1
+                    if (pageId === 1) {
+                        newDeleteBtn.style.display = 'none';
+                    } else {
+                        newDeleteBtn.style.display = 'block';
+                    }
+                }
+            });
+        }
+
+        // Initialize editable elements
+        function initializeEditableElements() {
+            // Handle business news header (multi-line) - special handling first
+            document.querySelectorAll('.business-news-header').forEach(header => {
+                // Skip if already initialized
+                if (header.hasAttribute('data-initialized')) return;
+                header.setAttribute('data-initialized', 'true');
+                
+                const placeholder = header.getAttribute('data-placeholder');
+                // Convert placeholder from &#10; to <br> for display
+                const placeholderHTML = placeholder ? placeholder.replace(/&#10;/g, '<br>') : '';
+                const placeholderText = placeholder ? placeholder.replace(/&#10;/g, '\n') : '';
+                
+                // Check if content is empty or matches placeholder
+                const currentText = header.textContent.trim();
+                const currentHTML = header.innerHTML.trim();
+                const placeholderTextNormalized = placeholderText.replace(/\n/g, ' ').trim();
+                const isEmpty = currentText === '' || currentText === placeholderTextNormalized;
+                
+                // Check if current HTML matches placeholder HTML (allowing for whitespace differences)
+                const normalizedCurrentHTML = currentHTML.replace(/\s+/g, ' ').trim();
+                const normalizedPlaceholderHTML = placeholderHTML.replace(/\s+/g, ' ').trim();
+                const matchesPlaceholder = normalizedCurrentHTML === normalizedPlaceholderHTML;
+                
+                // If empty or matches placeholder, set placeholder
+                if ((isEmpty || matchesPlaceholder) && placeholderHTML) {
+                    header.innerHTML = placeholderHTML;
+                    header.classList.add('empty-placeholder');
+                } else if (currentText === '') {
+                    // If truly empty, set placeholder
+                    if (placeholderHTML) {
+                        header.innerHTML = placeholderHTML;
+                        header.classList.add('empty-placeholder');
+                    }
+                } else {
+                    // Has content, ensure it's properly formatted with <br> tags
+                    header.classList.remove('empty-placeholder');
+                }
+                
+                // Handle focus - preserve whitespace-only content
+                header.addEventListener('focus', function() {
+                    const text = this.textContent.trim();
+                    const placeholderTextOnly = placeholderText.replace(/\n/g, ' ').trim();
+                    const hasTextNodes = Array.from(this.childNodes).some(node => 
+                        node.nodeType === Node.TEXT_NODE && node.textContent.length > 0
+                    );
+                    const hasBrTags = this.querySelectorAll('br').length > 0;
+                    const isEmpty = !hasTextNodes && !hasBrTags && this.textContent === '';
+                    
+                    // Only clear if it's truly empty or matches placeholder exactly
+                    if (isEmpty || text === placeholderTextOnly) {
+                        // Clear content only if it matches placeholder
+                        if (text === placeholderTextOnly) {
+                            this.innerHTML = '';
+                        }
+                        this.classList.remove('empty-placeholder');
+                        // Set cursor position at start
+                        setTimeout(() => {
+                            const range = document.createRange();
+                            const sel = window.getSelection();
+                            range.setStart(this, 0);
+                            range.collapse(true);
+                            sel.removeAllRanges();
+                            sel.addRange(range);
+                        }, 0);
+                    } else {
+                        // Has content (including whitespace), keep it
+                        this.classList.remove('empty-placeholder');
+                    }
+                });
+                
+                // Handle blur - accept whitespace as valid content
+                header.addEventListener('blur', function() {
+                    // Check if element is truly empty (no text nodes or only empty text nodes)
+                    const hasTextNodes = Array.from(this.childNodes).some(node => 
+                        node.nodeType === Node.TEXT_NODE && node.textContent.trim().length > 0
+                    );
+                    const hasBrTags = this.querySelectorAll('br').length > 0;
+                    const isEmpty = !hasTextNodes && !hasBrTags && this.textContent === '';
+                    
+                    if (isEmpty) {
+                        if (placeholderHTML) {
+                            this.innerHTML = placeholderHTML;
+                            this.classList.add('empty-placeholder');
+                        }
+                    } else {
+                        // Has content (including whitespace), keep it and remove placeholder class
+                        this.classList.remove('empty-placeholder');
+                    }
+                });
+                
+                // Handle keydown - ensure Enter creates <br> instead of <div> or <p>
+                header.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        // Insert <br> at cursor position
+                        document.execCommand('insertHTML', false, '<br>');
+                    }
+                });
+                
+                // Handle input - normalize content but preserve formatting
+                header.addEventListener('input', function() {
+                    // Only normalize if we detect problematic tags (div/p), otherwise preserve formatting
+                    let html = this.innerHTML;
+                    const hadDivs = html.includes('<div>') || html.includes('</div>');
+                    const hadPs = html.includes('<p>') || html.includes('</p>');
+                    
+                    if (hadDivs || hadPs) {
+                        // Save selection before modifying
+                        const selection = window.getSelection();
+                        let cursorPosition = 0;
+                        
+                        if (selection.rangeCount > 0) {
+                            const range = selection.getRangeAt(0);
+                            const preCaretRange = range.cloneRange();
+                            preCaretRange.selectNodeContents(this);
+                            preCaretRange.setEnd(range.endContainer, range.endOffset);
+                            cursorPosition = preCaretRange.toString().length;
+                        }
+                        
+                        // Replace div and p tags with <br> while preserving other formatting
+                        html = html.replace(/<\/div>/gi, '<br>').replace(/<div[^>]*>/gi, '');
+                        html = html.replace(/<\/p>/gi, '<br>').replace(/<p[^>]*>/gi, '');
+                        // Clean up multiple consecutive <br> tags
+                        html = html.replace(/(<br\s*\/?>){2,}/gi, '<br>');
+                        this.innerHTML = html;
+                        
+                        // Restore cursor position
+                        setTimeout(() => {
+                            try {
+                                const range = document.createRange();
+                                const walker = document.createTreeWalker(
+                                    this,
+                                    NodeFilter.SHOW_TEXT,
+                                    null,
+                                    false
+                                );
+                                
+                                let currentOffset = 0;
+                                let targetNode = null;
+                                let targetOffset = 0;
+                                
+                                let node;
+                                while (node = walker.nextNode()) {
+                                    const nodeLength = node.textContent.length;
+                                    if (currentOffset + nodeLength >= cursorPosition) {
+                                        targetNode = node;
+                                        targetOffset = cursorPosition - currentOffset;
+                                        break;
+                                    }
+                                    currentOffset += nodeLength;
+                                }
+                                
+                                if (targetNode) {
+                                    range.setStart(targetNode, Math.min(targetOffset, targetNode.textContent.length));
+                                    range.collapse(true);
+                                    selection.removeAllRanges();
+                                    selection.addRange(range);
+                                }
+                            } catch (e) {
+                                // If cursor restoration fails, just set to end
+                                const range = document.createRange();
+                                range.selectNodeContents(this);
+                                range.collapse(false);
+                                selection.removeAllRanges();
+                                selection.addRange(range);
+                            }
+                        }, 0);
+                    }
+                    
+                    // Remove placeholder class if content exists
+                    if (this.textContent.trim() !== '' || this.innerHTML.includes('<br>')) {
+                        this.classList.remove('empty-placeholder');
+                    }
+                });
+                
+                // Handle paste - preserve formatting if available
+                header.addEventListener('paste', function(e) {
+                    e.preventDefault();
+                    const clipboardData = e.clipboardData || window.clipboardData;
+                    
+                    // Try to get HTML first (preserves formatting)
+                    const html = clipboardData.getData('text/html');
+                    if (html) {
+                        // Clean the HTML - remove div/p tags but preserve other formatting
+                        let cleanHTML = html
+                            .replace(/<\/div>/gi, '<br>')
+                            .replace(/<div[^>]*>/gi, '')
+                            .replace(/<\/p>/gi, '<br>')
+                            .replace(/<p[^>]*>/gi, '');
+                        // Insert HTML with formatting preserved
+                        document.execCommand('insertHTML', false, cleanHTML);
+                    } else {
+                        // Fallback to plain text
+                        const text = clipboardData.getData('text');
+                        document.execCommand('insertText', false, text);
+                    }
+                });
+            });
+            
+            // Handle placeholder text for other contenteditable elements (non-business-news-header)
+            document.querySelectorAll('[contenteditable="true"]:not(.business-news-header)').forEach(element => {
+                // Skip if already initialized
+                if (element.hasAttribute('data-initialized')) return;
+                element.setAttribute('data-initialized', 'true');
+                
+            const placeholder = element.getAttribute('data-placeholder');
+            
+            element.addEventListener('focus', function() {
+                    const placeholderText = placeholder ? placeholder.replace(/&#10;/g, '\n') : '';
+                    const currentText = this.textContent;
+                    const matchesPlaceholder = currentText.trim() === placeholderText.trim();
+                    
+                    // Only clear if it matches placeholder exactly (so user can type)
+                    // Preserve whitespace-only content that user entered
+                    if (matchesPlaceholder && placeholderText) {
+                    this.textContent = '';
+                }
+                    this.classList.remove('empty-placeholder');
+            });
+
+            element.addEventListener('blur', function() {
+                    // Accept whitespace as valid content - only restore placeholder if truly empty
+                    // Check if element has any text nodes with content (including whitespace)
+                    const hasContent = Array.from(this.childNodes).some(node => 
+                        node.nodeType === Node.TEXT_NODE && node.textContent.length > 0
+                    ) || this.textContent.length > 0;
+                    
+                    // Only restore placeholder if element is truly empty (no text nodes)
+                    if (!hasContent) {
+                        if (placeholder) {
+                            this.textContent = placeholder.replace(/&#10;/g, '\n');
+                    this.classList.add('empty-placeholder');
+                        }
+                } else {
+                        // Has content (including whitespace), keep it and remove placeholder class
+                    this.classList.remove('empty-placeholder');
+                }
+            });
+
+                // Check on load - accept whitespace as valid content
+                const placeholderText = placeholder ? placeholder.replace(/&#10;/g, '\n') : '';
+                const hasContent = Array.from(element.childNodes).some(node => 
+                    node.nodeType === Node.TEXT_NODE && node.textContent.length > 0
+                ) || element.textContent.length > 0;
+                
+                // Only set placeholder if element is truly empty (no text nodes) or matches placeholder exactly
+                const matchesPlaceholder = element.textContent.trim() === placeholderText.trim();
+                if ((!hasContent || matchesPlaceholder) && placeholder) {
+                    element.textContent = placeholder.replace(/&#10;/g, '\n');
+                    element.classList.add('empty-placeholder');
+                } else if (hasContent) {
+                    // Has content (including whitespace), keep it
+                    element.classList.remove('empty-placeholder');
+                }
+            });
+
+            // Prevent default behavior for contenteditable (except business-news-header which has its own handler)
+            document.querySelectorAll('[contenteditable="true"]:not(.business-news-header)').forEach(element => {
+                if (!element.hasAttribute('data-paste-handler')) {
+                    element.setAttribute('data-paste-handler', 'true');
+                element.addEventListener('paste', function(e) {
+                    e.preventDefault();
+                    const text = (e.clipboardData || window.clipboardData).getData('text');
+                    document.execCommand('insertText', false, text);
+                });
+                }
+            });
+        }
+
+        // Add event item
+        function addEventItem() {
+            const eventsList = document.getElementById('eventsList');
+            const newItem = document.createElement('li');
+            newItem.contentEditable = true;
+            newItem.className = 'editable';
+            newItem.setAttribute('data-placeholder', 'New event item');
+            newItem.textContent = 'New event item';
+            newItem.addEventListener('focus', function() {
+                if (this.textContent.trim() === 'New event item') {
+                    this.textContent = '';
+                }
+            });
+            newItem.addEventListener('blur', function() {
+                if (this.textContent.trim() === '') {
+                    this.remove();
+                }
+            });
+            
+            const removeBtn = document.createElement('button');
+            removeBtn.className = 'remove-event-btn';
+            removeBtn.textContent = '×';
+            removeBtn.onclick = function() {
+                newItem.remove();
+            };
+            
+            eventsList.appendChild(newItem);
+            newItem.focus();
+        }
+
+        // Remove event item on backspace when empty
+        document.querySelectorAll('#eventsList').forEach(list => {
+            list.addEventListener('keydown', function(e) {
+                if (e.key === 'Backspace' && e.target.textContent.trim() === '' && this.children.length > 1) {
+                    e.preventDefault();
+                    e.target.remove();
+                }
+            });
+        });
+
+        // Save HTML pages to Google Drive
+        async function downloadPDF() {
+            const saveButton = document.getElementById('saveButton');
+            const pages = document.querySelectorAll('.newsletter-preview');
+            
+            if (pages.length === 0) {
+                alert('No pages to save!');
+                return;
+            }
+            
+            // Show saving animation on button
+            saveButton.classList.add('saving');
+            saveButton.disabled = true;
+            
+            // Show loading overlay with progress
+            const loadingOverlay = document.createElement('div');
+            loadingOverlay.className = 'loading-overlay';
+            loadingOverlay.innerHTML = `
+                <div class="loading-spinner"></div>
+                <div class="loading-text">Saving page 1 of ${pages.length}...</div>
+            `;
+            document.body.appendChild(loadingOverlay);
+            
+            const savedUrls = [];
+            let savedCount = 0;
+            let skippedCount = 0;
+            
+            try {
+                // Save pages sequentially to show progress
+                for (let index = 0; index < pages.length; index++) {
+                    const page = pages[index];
+                    const pageNumber = index + 1;
+                    
+                    // Update progress message
+                    loadingOverlay.querySelector('.loading-text').textContent = `Saving page ${pageNumber} of ${pages.length}...`;
+                    
+                    // First, collect file IDs from original page images before cloning
+                    // This ensures we have the file IDs even if they're not preserved in the clone
+                    const originalImages = page.querySelectorAll('img');
+                    const imageFileIdMap = new Map();
+                    originalImages.forEach((originalImg, index) => {
+                        const src = originalImg.getAttribute('src');
+                        // Try to get file ID from image itself
+                        let fileId = originalImg.getAttribute('data-file-id');
+                        if (!fileId) {
+                            // Try parent element
+                            const parent = originalImg.closest('[data-file-id]');
+                            if (parent) {
+                                fileId = parent.getAttribute('data-file-id');
+                            }
+                        }
+                        // Store mapping: index -> fileId
+                        if (fileId) {
+                            imageFileIdMap.set(index, fileId);
+                            console.log(`[Save] Page ${pageNumber}: Found file ID ${fileId} for image ${index + 1}`);
+                        } else {
+                            console.warn(`[Save] Page ${pageNumber}: Image ${index + 1} has no file ID (src: ${src ? src.substring(0, 50) + '...' : 'none'})`);
+                        }
+                    });
+                    
+                    const pageClone = page.cloneNode(true);
+                    
+                    // Convert data URL images back to Google Drive URLs before saving
+                    // This prevents huge file sizes from embedded images
+                    const images = pageClone.querySelectorAll('img');
+                    let convertedCount = 0;
+                    let skippedCount = 0;
+                    let localAssetCount = 0;
+                    
+                    images.forEach((img, index) => {
+                        const src = img.getAttribute('src');
+                        if (!src) return;
+                        
+                        if (src.startsWith('data:')) {
+                            // This is a data URL - try to find the original Google Drive URL
+                            // First check if image itself has data-file-id (most reliable)
+                            let imgFileId = img.getAttribute('data-file-id');
+                            
+                            // If not found, try to get from our map
+                            if (!imgFileId) {
+                                imgFileId = imageFileIdMap.get(index);
+                            }
+                            
+                            // If still not found, try parent element
+                            if (!imgFileId) {
+                                const parentElement = img.closest('[data-file-id]');
+                                if (parentElement) {
+                                    imgFileId = parentElement.getAttribute('data-file-id');
+                                }
+                            }
+                            
+                            if (imgFileId) {
+                                img.src = `${GOOGLE_SCRIPT_URL}?action=download&id=${imgFileId}`;
+                                convertedCount++;
+                                console.log(`[Save] Converted data URL image ${index + 1} to Google Drive URL (file ID: ${imgFileId})`);
+                            } else {
+                                // Check if it's a local asset (small, can keep)
+                                if (src.includes('assets/') || src.length < 1000) {
+                                    // Very small data URL or local asset, keep it
+                                    localAssetCount++;
+                                    console.log(`[Save] Keeping small data URL or local asset image ${index + 1}`);
+                                } else {
+                                    skippedCount++;
+                                    console.warn(`[Save] WARNING: Image ${index + 1} has large data URL (${Math.round(src.length / 1024)}KB) but no file ID reference!`);
+                                }
+                            }
+                        } else if (src.includes(GOOGLE_SCRIPT_URL)) {
+                            // Already a Google Drive URL, keep it
+                            console.log(`[Save] Image ${index + 1} already has Google Drive URL`);
+                        } else if (src.startsWith('assets/') || src.startsWith('./assets/')) {
+                            // Local asset, keep it as-is
+                            localAssetCount++;
+                            console.log(`[Save] Image ${index + 1} is local asset, keeping as-is`);
+                        }
+                    });
+                    
+                    console.log(`[Save] Page ${pageNumber} image conversion: ${convertedCount} converted, ${localAssetCount} local/small, ${skippedCount} skipped (large data URLs)`);
+                    
+                    // Remove editable attributes and event handlers
+                    pageClone.querySelectorAll('[contenteditable]').forEach(el => {
+                        el.removeAttribute('contenteditable');
+                    });
+                    pageClone.querySelectorAll('[onclick]').forEach(el => {
+                        el.removeAttribute('onclick');
+                    });
+                    // Remove control buttons completely
+                    pageClone.querySelectorAll('.gallery-add-image-btn, .add-event-btn, .gallery-image-controls, .gallery-btn-delete, .page-controls, .page-number').forEach(el => {
+                        el.remove();
+                    });
+                    
+                    // Create full HTML document for each page
+                    const pageHTML = `
+                        <!DOCTYPE html>
+                        <html>
+                        <head>
+                            <title>Newsletter Page ${pageNumber}</title>
+                            <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&amp;display=swap">
+                            <style>
+                                @page {
+                                    margin: 0;
+                                }
+                                body {
+                                    margin: 0;
+                                    padding: 0;
+                                }
+                                ${document.querySelector('style').textContent}
+                                .toolbar,
+                                .container,
+                                .editor-wrapper,
+                                .add-page-section,
+                                .page-controls,
+                                .page-number,
+                                .gallery-add-image-btn,
+                                .add-event-btn,
+                                .gallery-image-controls,
+                                .gallery-btn-delete {
+                                    display: none !important;
+                                }
+                                .page-wrapper {
+                                    margin: 0 !important;
+                                    padding: 0 !important;
+                                }
+                                .newsletter-preview {
+                                    margin: 0 !important;
+                                    transform: scale(1) !important;
+                                }
+                            </style>
+                        </head>
+                        <body>
+                            ${pageClone.outerHTML}
+                        </body>
+                        </html>
+                    `;
+                    
+                    // Check for remaining data URLs in the HTML and log file size
+                    const htmlSizeKB = Math.round(pageHTML.length / 1024);
+                    const dataUrlMatches = pageHTML.match(/data:image\/[^;]+;base64,[A-Za-z0-9+/=]+/g);
+                    if (dataUrlMatches) {
+                        const totalDataUrlSize = dataUrlMatches.reduce((sum, match) => sum + match.length, 0);
+                        const dataUrlSizeKB = Math.round(totalDataUrlSize / 1024);
+                        console.warn(`[Save] Page ${pageNumber}: Found ${dataUrlMatches.length} data URL(s) totaling ${dataUrlSizeKB}KB in HTML`);
+                        console.warn(`[Save] Page ${pageNumber}: Total HTML size: ${htmlSizeKB}KB (${dataUrlSizeKB}KB from data URLs)`);
+                    } else {
+                        console.log(`[Save] Page ${pageNumber}: Total HTML size: ${htmlSizeKB}KB (no data URLs found)`);
+                    }
+                    
+                    // Update progress message to show we're checking for duplicates
+                    loadingOverlay.querySelector('.loading-text').textContent = `Checking page ${pageNumber} of ${pages.length}...`;
+                    
+                    // Save page and wait for it to complete (includes duplicate check)
+                    const url = await saveHTMLPage(pageNumber, pageHTML);
+                    savedUrls.push(url);
+                    
+                    // Check if it was skipped (URL contains the existing file pattern)
+                    const wasSkipped = url.includes('action=download&id=');
+                    if (wasSkipped) {
+                        skippedCount++;
+                        console.log(`[Save] Page ${pageNumber} skipped (unchanged content)`);
+                    } else {
+                        savedCount++;
+                        console.log(`[Save] Page ${pageNumber} saved successfully to: ${url}`);
+                    }
+                }
+                
+                // Remove loading overlay
+                loadingOverlay.remove();
+                
+                // Show success message
+                const successMsg = document.createElement('div');
+                successMsg.style.cssText = 'position: fixed; top: 20px; right: 20px; background: #10b981; color: white; padding: 15px 25px; border-radius: 8px; z-index: 10001; font-family: Poppins, sans-serif; font-weight: 600; box-shadow: 0 4px 12px rgba(0,0,0,0.2);';
+                
+                if (skippedCount > 0) {
+                    successMsg.textContent = `✓ ${savedCount} page(s) saved, ${skippedCount} page(s) skipped (unchanged)`;
+                } else {
+                    successMsg.textContent = `✓ All ${savedCount} pages saved successfully!`;
+                }
+                
+                document.body.appendChild(successMsg);
+                setTimeout(() => successMsg.remove(), 3000);
+                console.log(`[Save] Summary: ${savedCount} saved, ${skippedCount} skipped, ${savedUrls.length} total`);
+                console.log('Saved pages:', savedUrls);
+            } catch (error) {
+                console.error('Error saving pages:', error);
+                loadingOverlay.remove();
+                alert('Error saving pages. Please try again.');
+            } finally {
+                // Hide saving animation
+                saveButton.classList.remove('saving');
+                saveButton.disabled = false;
+            }
+        }
+
+
+    </script>
+</body>
+</html>
