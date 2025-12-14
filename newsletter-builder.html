@@ -1005,11 +1005,7 @@
                     </div>
                     <div class="newsletter-right-column">
                         <div style="margin-top: 50px;">
-                            <h2 class="business-news-header editable" data-placeholder="INGOUDE
-BUSINESS
-NEWS" data-initialized="true">INGOUDE<br>BUSINESS<br>NEWS</h2>
-                    <div class="newsletter-right-column">
-                        <div style="margin-top: 50px;">
+                            <h2 class="business-news-header editable" contenteditable="true" data-placeholder="INGOUDE&#10;BUSINESS&#10;NEWS">INGOUDE<br>BUSINESS<br>NEWS</h2>
                             <h3 class="business-news-subtitle editable" contenteditable="true" data-placeholder="2023-2024">2023-2024</h3>
                             <p class="business-news-content editable" contenteditable="true" data-placeholder="Enter business news...">Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
                         </div>
@@ -1017,12 +1013,12 @@ NEWS" data-initialized="true">INGOUDE<br>BUSINESS<br>NEWS</h2>
                         <div style="margin-top: 60px;">
                             <h2 class="key-events-title editable" contenteditable="true" data-placeholder="KEY EVENTS">KEY EVENTS</h2>
                             <p class="section-content editable" contenteditable="true" data-placeholder="Enter event description..." style="margin-bottom: 10px;">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed mauris mi, sodales sed scelerisque ac, aliquet at tortor.</p>
-                            <ul class="events-list-preview" id="eventsList">
+                            <ul class="events-list-preview">
                                 <li contenteditable="true" class="editable" data-placeholder="Event item 1">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed mauris mi, sodales sed scelerisque ac, aliquet at tortor.</li>
                                 <li contenteditable="true" class="editable" data-placeholder="Event item 2">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed mauris mi, sodales sed scelerisque ac, aliquet at tortor.</li>
                                 <li contenteditable="true" class="editable" data-placeholder="Event item 3">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed mauris mi, sodales sed scelerisque ac, aliquet at tortor.</li>
                             </ul>
-                            <button class="add-event-btn" onclick="addEventItem()">+ Add Event</button>
+                            <button class="add-event-btn" onclick="addEventItem(this)">+ Add Event</button>
                         </div>
                     </div>
                 </div>
@@ -2587,14 +2583,32 @@ NEWS" data-initialized="true">INGOUDE<br>BUSINESS<br>NEWS</h2>
 
         // Add new page
         function addNewPage() {
-            pageCounter++;
+            // Get current maximum page number from existing pages
+            const existingPages = document.querySelectorAll('.page-wrapper');
+            let maxPageId = 0;
+            existingPages.forEach(page => {
+                const pageId = parseInt(page.getAttribute('data-page-id')) || 0;
+                maxPageId = Math.max(maxPageId, pageId);
+            });
+            
+            // Set pageCounter to max + 1 to ensure no conflicts
+            pageCounter = Math.max(pageCounter, maxPageId) + 1;
+            
             const isEvenPage = pageCounter % 2 === 0;
             const pageType = isEvenPage ? 'gallery' : 'content';
             
             const pagesContainer = document.getElementById('pagesContainer');
+            if (!pagesContainer) {
+                console.error('pagesContainer not found!');
+                return;
+            }
+            
             const pageWrapper = document.createElement('div');
             pageWrapper.className = 'page-wrapper';
             pageWrapper.setAttribute('data-page-id', pageCounter);
+            // Generate a unique ID for this new page (using timestamp to ensure uniqueness)
+            const uniqueId = `new-${pageCounter}-${Date.now()}`;
+            pageWrapper.setAttribute('data-unique-id', uniqueId);
 
             let pageContent = '';
             
@@ -2609,13 +2623,18 @@ NEWS" data-initialized="true">INGOUDE<br>BUSINESS<br>NEWS</h2>
             pageWrapper.innerHTML = `
                 <div class="page-number">Page ${pageCounter}</div>
                 <div class="page-controls">
-                    <button class="btn-page-control btn-delete-page" data-page-id="${pageCounter}">🗑️ Delete</button>
+                    <button class="btn-page-control btn-delete-page" data-page-id="${pageCounter}" data-unique-id="${uniqueId}">🗑️ Delete</button>
                 </div>
                 ${pageContent}
             `;
 
             pagesContainer.appendChild(pageWrapper);
+            
+            // Initialize editable elements for the new page
             initializeEditableElements();
+            
+            // Update page numbers to ensure correct display
+            updatePageNumbers();
             
             // Update gallery page height if it's a gallery page
             if (isEvenPage) {
@@ -2626,6 +2645,11 @@ NEWS" data-initialized="true">INGOUDE<br>BUSINESS<br>NEWS</h2>
                     }
                 }, 100);
             }
+            
+            // Scroll to the new page
+            setTimeout(() => {
+                pageWrapper.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }, 200);
         }
 
         // Create gallery page
@@ -2816,7 +2840,7 @@ NEWS" data-initialized="true">INGOUDE<br>BUSINESS<br>NEWS</h2>
                                     <li contenteditable="true" class="editable" data-placeholder="Event item 2">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed mauris mi, sodales sed scelerisque ac, aliquet at tortor.</li>
                                     <li contenteditable="true" class="editable" data-placeholder="Event item 3">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed mauris mi, sodales sed scelerisque ac, aliquet at tortor.</li>
                                 </ul>
-                                <button class="add-event-btn" onclick="addEventItem()">+ Add Event</button>
+                                <button class="add-event-btn" onclick="addEventItem(this)">+ Add Event</button>
                             </div>
                         </div>
                     </div>
@@ -2922,7 +2946,7 @@ NEWS" data-initialized="true">INGOUDE<br>BUSINESS<br>NEWS</h2>
                         <div style="margin-top: 20px;">
                             <h2 class="key-events-title editable" contenteditable="true" data-placeholder="${element.title}">${element.title}</h2>
                             <ul class="events-list-preview">${eventsHTML}</ul>
-                            <button class="add-event-btn" onclick="addEventItem()">+ Add Event</button>
+                            <button class="add-event-btn" onclick="addEventItem(this)">+ Add Event</button>
                         </div>
                     `;
                 } else if (element.subtitle) {
@@ -3362,8 +3386,32 @@ NEWS" data-initialized="true">INGOUDE<br>BUSINESS<br>NEWS</h2>
         }
 
         // Add event item
-        function addEventItem() {
-            const eventsList = document.getElementById('eventsList');
+        function addEventItem(button) {
+            // Find the events list relative to the button that was clicked
+            let eventsList = null;
+            if (button) {
+                // Find the closest events list relative to the button
+                const pageWrapper = button.closest('.page-wrapper') || button.closest('.newsletter-preview');
+                if (pageWrapper) {
+                    eventsList = pageWrapper.querySelector('.events-list-preview');
+                }
+            }
+            
+            // Fallback: try to find by ID (for backward compatibility)
+            if (!eventsList) {
+                eventsList = document.getElementById('eventsList');
+            }
+            
+            // Last resort: find the first events list in the document
+            if (!eventsList) {
+                eventsList = document.querySelector('.events-list-preview');
+            }
+            
+            if (!eventsList) {
+                console.error('Could not find events list');
+                return;
+            }
+            
             const newItem = document.createElement('li');
             newItem.contentEditable = true;
             newItem.className = 'editable';
