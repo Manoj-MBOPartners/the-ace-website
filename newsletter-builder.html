@@ -2220,6 +2220,22 @@
                 document.getElementById('pagesContainer').appendChild(pageWrapper);
                 pageCounter = Math.max(pageCounter, parseInt(pageNum));
                 
+                // Restore "Add Event" button if it's missing (it gets removed when saving)
+                pageWrapper.querySelectorAll('.events-list-preview').forEach(eventsList => {
+                    // Check if the button already exists in the parent container
+                    const parentContainer = eventsList.parentElement;
+                    const existingBtn = parentContainer.querySelector('.add-event-btn');
+                    if (!existingBtn) {
+                        // Create and add the button after the events list
+                        const addEventBtn = document.createElement('button');
+                        addEventBtn.className = 'add-event-btn';
+                        addEventBtn.textContent = '+ Add Event';
+                        addEventBtn.setAttribute('onclick', 'addEventItem(this)');
+                        // Insert after the events list
+                        parentContainer.insertBefore(addEventBtn, eventsList.nextSibling);
+                    }
+                });
+                
                 // Initialize editable elements for this newly loaded page
                 // Target only elements within this page wrapper to avoid conflicts
                 setTimeout(() => {
