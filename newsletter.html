@@ -1,0 +1,1317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Newsletter - The ACE</title>
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&amp;display=swap"
+    />
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      
+      img[src$=".png"],
+      img[src*="transperent"],
+      img[src*="transparent"] {
+        background-color: transparent !important;
+        background: transparent !important;
+      }
+
+      body {
+        font-family: 'Poppins', sans-serif;
+        background-color: #f5f5f5;
+        color: #333;
+        line-height: 1.6;
+        overflow-x: hidden;
+      }
+
+      .toolbar {
+        background: white;
+        padding: 15px 30px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+        margin-bottom: 20px;
+      }
+
+      .toolbar-title {
+        font-size: 20px;
+        font-weight: 700;
+        color: #1e3a8a;
+      }
+
+      /* Loading overlay */
+      .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 10000;
+        flex-direction: column;
+        gap: 20px;
+      }
+
+      .loading-spinner {
+        width: 50px;
+        height: 50px;
+        border: 4px solid rgba(255, 255, 255, 0.3);
+        border-top: 4px solid white;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+
+      .loading-text {
+        color: white;
+        font-size: 18px;
+        font-weight: 600;
+        font-family: 'Poppins', sans-serif;
+      }
+
+      .container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+
+      .editor-wrapper {
+        background: #e5e7eb;
+        padding: 40px;
+        border-radius: 8px;
+        display: flex;
+        justify-content: center;
+        min-height: calc(100vh - 200px);
+      }
+
+      .newsletter-preview {
+        width: 793.701px;
+        min-height: 1122.52px;
+        height: auto;
+        background: white;
+        color: #333;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        position: relative;
+        overflow: visible;
+        transform: scale(0.85);
+        transform-origin: top center;
+      }
+
+      .newsletter-preview[data-page-type="gallery"] {
+        overflow: visible;
+      }
+
+      .newsletter-preview::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 897.741px;
+        min-height: 1196.99px;
+        height: 100%;
+        background-image: url('https://media-public.canva.com/eQThM/MADyQweQThM/1/s2.jpg');
+        background-size: cover;
+        background-position: center;
+        opacity: 0.13;
+        z-index: 0;
+        transform: translate(-55.8512px, -39.706px);
+      }
+
+      .newsletter-preview > * {
+        position: relative;
+        z-index: 1;
+      }
+
+      .newsletter-header {
+        position: relative;
+        padding: 32px 46px 0;
+      }
+
+      .newsletter-logo-left {
+        position: absolute;
+        top: 32px;
+        left: 655px;
+        width: 100px;
+        height: 100px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .newsletter-logo-left img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        background-color: transparent !important;
+        background: transparent !important;
+      }
+
+      .newsletter-logo {
+        position: absolute;
+        top: 110px;
+        left: 650px;
+        width: 110px;
+        height: 110px;
+        background-color: transparent !important;
+        background: transparent !important;
+        background-image: none !important;
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: visible;
+      }
+
+      .newsletter-logo img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        background-color: transparent !important;
+        background: transparent !important;
+        background-image: none !important;
+        display: block;
+        mix-blend-mode: normal;
+        image-rendering: -webkit-optimize-contrast;
+        -webkit-background-clip: padding-box;
+        background-clip: padding-box;
+        opacity: 1;
+        filter: none;
+        border: none;
+        outline: none;
+        box-shadow: none;
+      }
+      
+      .newsletter-logo img[src*="transperent"],
+      .newsletter-logo img[src*="transparent"] {
+        background-color: transparent !important;
+        background: transparent !important;
+      }
+      
+      .newsletter-logo * {
+        background-color: transparent !important;
+        background: transparent !important;
+      }
+
+      .newsletter-title-wrapper {
+        margin-bottom: 20px;
+      }
+
+      .newsletter-title-main {
+        font-size: 83px;
+        font-weight: 800;
+        color: rgb(48, 94, 159);
+        line-height: 116px;
+        margin: 0;
+        margin-top: 0px;
+        margin-bottom: 0px;
+        margin-left: 0px;
+        text-transform: none;
+        font-family: 'Poppins', sans-serif;
+        letter-spacing: 0;
+        min-height: 116px;
+      }
+
+      .newsletter-title-sub {
+        font-size: 44px;
+        font-weight: 800;
+        color: rgb(48, 94, 159);
+        line-height: 62px;
+        margin: 0;
+        margin-left: 0px;
+        text-transform: none;
+        font-family: 'Poppins', sans-serif;
+        letter-spacing: 0;
+        min-height: 62px;
+      }
+
+      .newsletter-content {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 40px;
+        padding: 0 46px;
+        position: relative;
+      }
+
+      .newsletter-left-column {
+        position: relative;
+      }
+
+      .newsletter-right-column {
+        position: relative;
+      }
+
+      .decorative-line-horizontal {
+        position: absolute;
+        width: 694.587px;
+        height: 5px;
+        background: rgb(48, 94, 159);
+        top: 215px;
+        left: 52px;
+        z-index: 2;
+        pointer-events: none;
+      }
+
+      .decorative-line-horizontal-title {
+        width: 100%;
+        height: 5px;
+        background: rgb(48, 94, 159);
+        margin-top: 20px;
+        pointer-events: none;
+      }
+
+      .decorative-line-vertical {
+        position: absolute;
+        width: 5px;
+        height: 250px;
+        background: rgb(48, 94, 159);
+        top: 902px;
+        right: 283px;
+        z-index: 2;
+        pointer-events: none;
+      }
+
+      .newsletter-preview[data-page-type="gallery"] .decorative-line-vertical {
+        z-index: 0;
+      }
+
+      .newsletter-preview[data-page-type="gallery"] .gallery-image-item {
+        position: relative;
+        z-index: 1;
+      }
+
+      .newsletter-image-main {
+        width: 447.635px;
+        height: 255.769px;
+        background: #e5e7eb;
+        margin: 20px 0;
+        border-radius: 4px;
+        overflow: hidden;
+        position: relative;
+      }
+
+      .newsletter-image-main img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
+
+      .newsletter-image-bottom {
+        width: 378.746px;
+        height: 125.819px;
+        background: #e5e7eb;
+        margin: 20px 0;
+        border-radius: 4px;
+        overflow: hidden;
+        position: relative;
+      }
+
+      .newsletter-image-bottom img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
+
+      .section-title {
+        font-size: 33px;
+        font-weight: 800;
+        color: rgb(48, 94, 159);
+        line-height: 46px;
+        margin: 0 0 15px 0;
+        text-transform: uppercase;
+        font-family: 'Poppins', sans-serif;
+        min-height: 46px;
+      }
+
+      .section-content {
+        font-size: 15px;
+        line-height: 20px;
+        color: rgb(7, 10, 14);
+        margin: 0 0 20px 0;
+        text-align: left;
+        font-weight: 400;
+        font-family: 'Poppins', sans-serif;
+        min-height: 22px;
+      }
+
+      .business-news-header {
+        font-size: 36px;
+        font-weight: 800;
+        color: rgb(48, 94, 159);
+        line-height: 36px;
+        margin: 0 0 10px 0;
+        text-transform: none;
+        font-family: 'Poppins', sans-serif;
+        min-height: 108px;
+      }
+
+      .business-news-subtitle {
+        font-size: 29px;
+        font-weight: 400;
+        color: rgb(48, 94, 159);
+        line-height: 41px;
+        margin: 0 0 15px 0;
+        font-family: 'Poppins', sans-serif;
+        min-height: 41px;
+      }
+
+      .business-news-content {
+        font-size: 16px;
+        line-height: 23px;
+        color: rgb(7, 10, 14);
+        margin: 0;
+        font-weight: 400;
+        font-family: 'Poppins', sans-serif;
+        min-height: 23px;
+      }
+
+      .partnership-title {
+        font-size: 33px;
+        font-weight: 800;
+        color: rgb(48, 94, 159);
+        line-height: 36px;
+        margin: 0 0 15px 0;
+        text-transform: uppercase;
+        font-family: 'Poppins', sans-serif;
+        min-height: 36px;
+      }
+
+      .partnership-content {
+        font-size: 15px;
+        line-height: 20px;
+        color: rgb(7, 10, 14);
+        margin: 0;
+        font-weight: 400;
+        font-family: 'Poppins', sans-serif;
+        min-height: 18px;
+      }
+
+      .key-events-title {
+        font-size: 33px;
+        font-weight: 800;
+        color: rgb(48, 94, 159);
+        line-height: 46px;
+        margin: 0 0 15px 0;
+        text-transform: uppercase;
+        font-family: 'Poppins', sans-serif;
+        min-height: 46px;
+      }
+
+      .events-list-preview {
+        list-style: disc;
+        padding-left: 20px;
+        margin: 0;
+      }
+
+      .events-list-preview li {
+        padding: 0 0 8px 0;
+        font-size: 13px;
+        line-height: 16px;
+        color: rgb(7, 10, 14);
+        text-align: left;
+        font-weight: 400;
+        font-family: 'Poppins', sans-serif;
+        list-style-type: disc;
+        min-height: 16px;
+      }
+
+      .pages-container {
+        display: flex;
+        flex-direction: column;
+        gap: 30px;
+        align-items: center;
+      }
+
+      .page-wrapper {
+        position: relative;
+      }
+
+      .page-number {
+        position: absolute;
+        top: 960px;
+        left: 440px;
+        font-weight: 600;
+        color: #1e3a8a;
+        font-size: 14px;
+      }
+
+      .gallery-page {
+        display: flex;
+        flex-direction: column;
+        min-height: 100%;
+      }
+
+      .gallery-section {
+        flex: 0 1 auto;
+        display: flex;
+        flex-direction: column;
+        padding: 40px;
+        border-bottom: 3px solid rgb(48, 94, 159);
+        min-height: 400px;
+      }
+
+      .gallery-section:last-child {
+        border-bottom: none;
+      }
+
+      .gallery-section-title {
+        font-size: 36px;
+        font-weight: 800;
+        color: rgb(48, 94, 159);
+        margin-bottom: 20px;
+        text-align: center;
+        text-transform: uppercase;
+        font-family: 'Poppins', sans-serif;
+      }
+
+      .gallery-images {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 15px;
+        flex: 0 1 auto;
+        position: relative;
+        padding-right: 60px;
+        min-height: 200px;
+      }
+
+      .gallery-image-item {
+        width: 100%;
+        height: 200px;
+        background: #e5e7eb;
+        border-radius: 4px;
+        overflow: hidden;
+        position: relative;
+      }
+
+      .gallery-image-item img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .layout-single-column {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        padding: 0 46px;
+      }
+
+      .layout-two-column {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 40px;
+        padding: 0 46px;
+      }
+
+      .layout-three-column {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 30px;
+        padding: 0 46px;
+      }
+
+      .layout-image-left {
+        display: grid;
+        grid-template-columns: 1fr 2fr;
+        gap: 30px;
+        padding: 0 46px;
+      }
+
+      .layout-image-right {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 30px;
+        padding: 0 46px;
+      }
+
+      @media print {
+        @page {
+          margin: 0;
+        }
+
+        body {
+          margin: 0;
+          padding: 0;
+        }
+
+        .toolbar {
+          display: none !important;
+        }
+
+        .page-wrapper {
+          margin: 0 !important;
+          padding: 0 !important;
+        }
+
+        .newsletter-preview {
+          margin: 0 !important;
+          page-break-after: always;
+        }
+
+        .newsletter-preview:last-child {
+          page-break-after: auto;
+        }
+      }
+
+      @media (max-width: 768px) {
+        .container {
+          padding: 10px;
+        }
+
+        .editor-wrapper {
+          padding: 10px;
+          background: #f5f5f5;
+        }
+
+        .newsletter-preview {
+          width: 100%;
+          max-width: 100%;
+          height: auto;
+          transform: scale(1);
+          transform-origin: top center;
+          box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .newsletter-header {
+          padding: 20px 20px 0;
+        }
+
+        .newsletter-content {
+          grid-template-columns: 1fr;
+          gap: 20px;
+          padding: 0 20px;
+        }
+
+        .newsletter-title-main {
+          font-size: 48px;
+          line-height: 60px;
+          min-height: 60px;
+        }
+
+        .newsletter-title-sub {
+          font-size: 28px;
+          line-height: 36px;
+          min-height: 36px;
+        }
+
+        .section-title,
+        .partnership-title,
+        .key-events-title {
+          font-size: 24px;
+          line-height: 32px;
+          margin-bottom: 10px;
+        }
+
+        .section-content,
+        .partnership-content {
+          font-size: 14px;
+          line-height: 20px;
+        }
+
+        .business-news-header {
+          font-size: 24px;
+          line-height: 28px;
+          min-height: auto;
+        }
+
+        .business-news-subtitle {
+          font-size: 20px;
+          line-height: 28px;
+        }
+
+        .business-news-content {
+          font-size: 14px;
+          line-height: 20px;
+        }
+
+        .newsletter-image-main {
+          width: 100%;
+          height: auto;
+          min-height: 200px;
+        }
+
+        .newsletter-image-bottom {
+          width: 100%;
+          height: auto;
+          min-height: 150px;
+        }
+
+        .gallery-images {
+          grid-template-columns: 1fr;
+          padding-right: 0;
+        }
+
+        .gallery-image-item {
+          height: 250px;
+        }
+
+        .layout-two-column,
+        .layout-three-column {
+          grid-template-columns: 1fr;
+          padding: 0 20px;
+        }
+
+        .layout-image-left,
+        .layout-image-right {
+          grid-template-columns: 1fr;
+          padding: 0 20px;
+        }
+
+        .page-number {
+          position: relative;
+          top: auto;
+          left: auto;
+          text-align: center;
+          margin-top: 20px;
+          margin-bottom: 10px;
+        }
+
+        .decorative-line-horizontal {
+          width: 100%;
+          left: 0;
+          top: 180px;
+        }
+
+        .decorative-line-vertical {
+          display: none;
+        }
+
+        .newsletter-logo-left {
+          position: relative;
+          top: auto;
+          left: auto;
+          margin: 0 auto 10px;
+        }
+
+        .newsletter-logo {
+          position: relative;
+          top: auto;
+          left: auto;
+          margin: 0 auto 10px;
+        }
+
+        .toolbar {
+          padding: 10px 15px;
+          flex-direction: row;
+          gap: 10px;
+        }
+
+        .toolbar-title {
+          font-size: 16px;
+        }
+
+        .pages-container {
+          gap: 20px;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .container {
+          padding: 5px;
+        }
+
+        .editor-wrapper {
+          padding: 5px;
+        }
+
+        .newsletter-header {
+          padding: 15px 15px 0;
+        }
+
+        .newsletter-content {
+          padding: 0 15px;
+        }
+
+        .newsletter-title-main {
+          font-size: 36px;
+          line-height: 48px;
+          min-height: 48px;
+        }
+
+        .newsletter-title-sub {
+          font-size: 22px;
+          line-height: 30px;
+          min-height: 30px;
+        }
+
+        .section-title,
+        .partnership-title,
+        .key-events-title {
+          font-size: 20px;
+          line-height: 28px;
+        }
+
+        .section-content,
+        .partnership-content,
+        .business-news-content {
+          font-size: 13px;
+          line-height: 18px;
+        }
+
+        .business-news-header {
+          font-size: 20px;
+          line-height: 24px;
+        }
+
+        .business-news-subtitle {
+          font-size: 18px;
+          line-height: 24px;
+        }
+
+        .gallery-section {
+          padding: 20px 15px;
+        }
+
+        .gallery-section-title {
+          font-size: 24px;
+          margin-bottom: 15px;
+        }
+
+        .gallery-image-item {
+          height: 200px;
+        }
+
+        .events-list-preview li {
+          font-size: 12px;
+          line-height: 16px;
+        }
+      }
+    </style>
+</head>
+<body>
+    <div class="toolbar">
+        <div class="toolbar-title">📰 Newsletter</div>
+    </div>
+
+    <div class="container">
+        <div class="editor-wrapper">
+            <div class="pages-container" id="pagesContainer">
+                <!-- Pages will be loaded here from Google Drive -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwDx2NWivsXfQ-V4Lhs9W2Qed0v2hbQ3R1yRRcVD5fUnGt-ETzOrv6GOpfQsYK6rRl4/exec';
+        
+        // Initialize IndexedDB for image storage
+        let imageDB = null;
+        const DB_NAME = 'newsletter_images';
+        const DB_VERSION = 1;
+        const STORE_NAME = 'images';
+        
+        async function initImageDB() {
+            return new Promise((resolve, reject) => {
+                if (imageDB) {
+                    resolve(imageDB);
+                    return;
+                }
+                
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+                
+                request.onerror = () => {
+                    console.error('Failed to open IndexedDB:', request.error);
+                    reject(request.error);
+                };
+                
+                request.onsuccess = () => {
+                    imageDB = request.result;
+                    resolve(imageDB);
+                };
+                
+                request.onupgradeneeded = (event) => {
+                    const db = event.target.result;
+                    if (!db.objectStoreNames.contains(STORE_NAME)) {
+                        const objectStore = db.createObjectStore(STORE_NAME, { keyPath: 'fileId' });
+                        objectStore.createIndex('timestamp', 'timestamp', { unique: false });
+                    }
+                };
+            });
+        }
+        
+        // Get image from IndexedDB or localStorage
+        async function getImageFromLocalStorage(fileId) {
+            try {
+                // Try IndexedDB first
+                try {
+                    const db = await initImageDB();
+                    const transaction = db.transaction([STORE_NAME], 'readonly');
+                    const store = transaction.objectStore(STORE_NAME);
+                    
+                    const data = await new Promise((resolve, reject) => {
+                        const request = store.get(fileId);
+                        request.onsuccess = () => resolve(request.result);
+                        request.onerror = () => reject(request.error);
+                    });
+                    
+                    if (data && data.dataUrl) {
+                        return data.dataUrl;
+                    }
+                } catch (dbError) {
+                    console.warn('IndexedDB retrieval failed, trying localStorage:', dbError);
+                }
+                
+                // Fallback to localStorage
+                const key = `newsletter_image_${fileId}`;
+                const cached = localStorage.getItem(key);
+                if (cached) {
+                    return cached;
+                }
+                
+                return null;
+            } catch (error) {
+                console.error('Error getting image:', error);
+                return null;
+            }
+        }
+        
+        // Store image in IndexedDB or localStorage
+        async function storeImageInLocalStorage(fileId, dataUrl) {
+            try {
+                try {
+                    const db = await initImageDB();
+                    const transaction = db.transaction([STORE_NAME], 'readwrite');
+                    const store = transaction.objectStore(STORE_NAME);
+                    
+                    await new Promise((resolve, reject) => {
+                        const request = store.put({
+                            fileId: fileId,
+                            dataUrl: dataUrl,
+                            timestamp: Date.now()
+                        });
+                        request.onsuccess = () => resolve();
+                        request.onerror = () => reject(request.error);
+                    });
+                    return;
+                } catch (dbError) {
+                    console.warn('IndexedDB storage failed, falling back to localStorage:', dbError);
+                }
+                
+                // Fallback to localStorage
+                const key = `newsletter_image_${fileId}`;
+                localStorage.setItem(key, dataUrl);
+            } catch (error) {
+                console.error('Error storing image:', error);
+            }
+        }
+        
+        // Download image from Google Drive and store
+        async function downloadAndStoreImage(fileId) {
+            try {
+                const cachedImage = await getImageFromLocalStorage(fileId);
+                if (cachedImage) {
+                    return cachedImage;
+                }
+                
+                console.log(`Downloading image ${fileId} from Google Drive...`);
+                const response = await fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'cors',
+                    cache: 'no-store',
+                    headers: {
+                        'Content-Type': 'text/plain;charset=utf-8',
+                    },
+                    body: JSON.stringify({
+                        action: 'download',
+                        id: fileId
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`Download failed: ${response.statusText}`);
+                }
+                
+                const blob = await response.blob();
+                const dataUrl = await new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = () => resolve(reader.result);
+                    reader.onerror = reject;
+                    reader.readAsDataURL(blob);
+                });
+                
+                await storeImageInLocalStorage(fileId, dataUrl);
+                return dataUrl;
+            } catch (error) {
+                console.error(`Error downloading image ${fileId}:`, error);
+                return null;
+            }
+        }
+        
+        // Extract file ID from Google Drive URL
+        function extractFileIdFromUrl(url) {
+            if (!url) return null;
+            let match = url.match(/[?&]id=([^&]+)/);
+            if (match) return match[1];
+            match = url.match(/\/file\/d\/([^\/]+)/);
+            if (match) return match[1];
+            match = url.match(/\/uc[?&].*id=([^&]+)/);
+            if (match) return match[1];
+            return null;
+        }
+        
+        // Process images in a loaded page
+        async function processPageImages(pageElement) {
+            if (!pageElement) return;
+            
+            const images = pageElement.querySelectorAll('img');
+            const imagePromises = [];
+            
+            images.forEach(img => {
+                const src = img.getAttribute('src');
+                if (!src) return;
+                
+                if (src.startsWith('data:')) return;
+                if (src.startsWith('assets/') || src.startsWith('./assets/')) return;
+                
+                const fileId = extractFileIdFromUrl(src);
+                
+                if (fileId) {
+                    img.setAttribute('data-file-id', fileId);
+                    
+                    const promise = (async () => {
+                        const cachedImage = await getImageFromLocalStorage(fileId);
+                        if (cachedImage) {
+                            img.src = cachedImage;
+                        } else {
+                            const dataUrl = await downloadAndStoreImage(fileId);
+                            if (dataUrl) {
+                                img.src = dataUrl;
+                            }
+                        }
+                    })();
+                    imagePromises.push(promise);
+                } else if (src.includes(GOOGLE_SCRIPT_URL)) {
+                    const fileId = extractFileIdFromUrl(src);
+                    if (fileId) {
+                        img.setAttribute('data-file-id', fileId);
+                        
+                        const promise = (async () => {
+                            const cachedImage = await getImageFromLocalStorage(fileId);
+                            if (cachedImage) {
+                                img.src = cachedImage;
+                            } else {
+                                const dataUrl = await downloadAndStoreImage(fileId);
+                                if (dataUrl) {
+                                    img.src = dataUrl;
+                                }
+                            }
+                        })();
+                        imagePromises.push(promise);
+                    }
+                }
+            });
+            
+            await Promise.all(imagePromises);
+        }
+        
+        // Load a single page from Google Drive
+        async function loadPageFromGoogleDrive(pageNum, fileId) {
+            try {
+                console.log(`Loading page ${pageNum} from Google Drive...`);
+                
+                const uniqueId = `${pageNum}-${fileId}`;
+                
+                const existingPage = document.querySelector(`[data-unique-id="${uniqueId}"]`);
+                if (existingPage) {
+                    console.log(`Page ${pageNum} already loaded, skipping`);
+                    return;
+                }
+                
+                const existingPagesByNumber = document.querySelectorAll(`.page-wrapper[data-page-id="${pageNum}"]`);
+                if (existingPagesByNumber.length > 0) {
+                    existingPagesByNumber.forEach(page => page.remove());
+                }
+                
+                const pageResponse = await fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'cors',
+                    cache: 'no-store',
+                    headers: {
+                        'Content-Type': 'text/plain;charset=utf-8',
+                    },
+                    body: JSON.stringify({
+                        action: 'download',
+                        id: fileId
+                    })
+                });
+                
+                if (!pageResponse.ok) {
+                    throw new Error(`Failed to load page ${pageNum}: ${pageResponse.statusText}`);
+                }
+                
+                const pageHTML = await pageResponse.text();
+                
+                if (pageHTML.trim().startsWith('{')) {
+                    try {
+                        const jsonResponse = JSON.parse(pageHTML);
+                        if (jsonResponse.status === 'error') {
+                            throw new Error(jsonResponse.data?.error || 'Error loading page');
+                        }
+                    } catch (e) {
+                        // Not JSON, continue
+                    }
+                }
+                
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = pageHTML;
+                
+                let pageElement = tempDiv.querySelector('.newsletter-preview');
+                
+                if (!pageElement) {
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(pageHTML, 'text/html');
+                    pageElement = doc.querySelector('.newsletter-preview');
+                }
+                
+                if (!pageElement) {
+                    console.error(`Page ${pageNum}: .newsletter-preview not found`);
+                    return;
+                }
+                
+                // Remove all editing-related attributes and elements
+                pageElement.querySelectorAll('[contenteditable]').forEach(el => {
+                    el.removeAttribute('contenteditable');
+                });
+                
+                pageElement.querySelectorAll('[onclick]').forEach(el => {
+                    el.removeAttribute('onclick');
+                });
+                
+                // Remove control buttons (but keep page-number for display)
+                pageElement.querySelectorAll('.gallery-add-image-btn, .add-event-btn, .gallery-image-controls, .gallery-btn-delete, .page-controls').forEach(el => {
+                    el.remove();
+                });
+                
+                // Remove page-number from inside the newsletter-preview (it will be added to wrapper)
+                pageElement.querySelectorAll('.page-number').forEach(el => {
+                    el.remove();
+                });
+                
+                // Remove file input elements
+                pageElement.querySelectorAll('input[type="file"]').forEach(el => {
+                    el.remove();
+                });
+                
+                // Remove h1 from pages that are not page 1
+                if (pageNum !== 1) {
+                    const titleWrapper = pageElement.querySelector('.newsletter-title-wrapper');
+                    if (titleWrapper) {
+                        const h1Element = titleWrapper.querySelector('.newsletter-title-main');
+                        if (h1Element) {
+                            h1Element.remove();
+                        }
+                    }
+                }
+                
+                // Process images
+                await processPageImages(pageElement);
+                
+                // Create page wrapper
+                const pageWrapper = document.createElement('div');
+                pageWrapper.className = 'page-wrapper';
+                pageWrapper.setAttribute('data-page-id', pageNum);
+                pageWrapper.setAttribute('data-unique-id', uniqueId);
+                pageWrapper.setAttribute('data-file-id', fileId);
+                pageWrapper.innerHTML = `
+                    <div class="page-number">Page ${pageNum}</div>
+                    ${pageElement.outerHTML}
+                `;
+                
+                document.getElementById('pagesContainer').appendChild(pageWrapper);
+                
+                console.log(`Successfully loaded page ${pageNum}`);
+            } catch (error) {
+                console.error(`Error loading page ${pageNum}:`, error);
+            }
+        }
+        
+        // Load saved pages from Google Drive
+        let isLoadingPages = false;
+        async function loadSavedPages() {
+            if (isLoadingPages) {
+                return;
+            }
+            isLoadingPages = true;
+            
+            const loadingOverlay = document.createElement('div');
+            loadingOverlay.className = 'loading-overlay';
+            loadingOverlay.innerHTML = `
+                <div class="loading-spinner"></div>
+                <div class="loading-text">Loading newsletter...</div>
+            `;
+            document.body.appendChild(loadingOverlay);
+            
+            try {
+                console.log('Loading saved pages from Google Drive...');
+                
+                let pageFiles = [];
+                try {
+                    const listResponse = await fetch(GOOGLE_SCRIPT_URL, {
+                        method: 'POST',
+                        mode: 'cors',
+                        cache: 'no-store',
+                        headers: {
+                            'Content-Type': 'text/plain;charset=utf-8',
+                        },
+                        body: JSON.stringify({ action: 'list' })
+                    });
+                    
+                    if (!listResponse.ok) {
+                        throw new Error('Failed to fetch file list');
+                    }
+                    
+                    const listResult = await listResponse.json();
+                    const allFiles = listResult.data || [];
+                    const filesArray = Array.isArray(allFiles) ? allFiles : [];
+                    
+                    pageFiles = filesArray.filter(f => f.name && f.name.startsWith('newsletter-page-') && f.name.endsWith('.html'))
+                        .sort((a, b) => {
+                            const aMatch = a.name.match(/newsletter-page-(\d+)-/);
+                            const bMatch = b.name.match(/newsletter-page-(\d+)-/);
+                            if (aMatch && bMatch) {
+                                const pageDiff = parseInt(aMatch[1]) - parseInt(bMatch[1]);
+                                if (pageDiff !== 0) return pageDiff;
+                            }
+                            return a.name.localeCompare(b.name);
+                        });
+                    
+                    console.log(`Found ${pageFiles.length} newsletter page files`);
+                } catch (error) {
+                    console.error('Error fetching file list:', error);
+                    loadingOverlay.remove();
+                    return;
+                }
+                
+                if (pageFiles.length === 0) {
+                    console.log('No saved pages found');
+                    loadingOverlay.remove();
+                    return;
+                }
+                
+                // Get deleted page IDs from localStorage
+                const deletedPageIdsList = JSON.parse(localStorage.getItem('deletedPageIds') || '[]');
+                
+                // Group pages by page number and get latest version
+                const pagesByNumber = {};
+                pageFiles.forEach(file => {
+                    const match = file.name.match(/newsletter-page-(\d+)-/);
+                    if (match) {
+                        const pageNum = parseInt(match[1]);
+                        const uniqueId = `${pageNum}-${file.id}`;
+                        
+                        if (deletedPageIdsList.includes(uniqueId)) {
+                            return;
+                        }
+                        
+                        if (!pagesByNumber[pageNum]) {
+                            pagesByNumber[pageNum] = [];
+                        }
+                        pagesByNumber[pageNum].push(file);
+                    }
+                });
+                
+                const latestPageFiles = [];
+                Object.keys(pagesByNumber).forEach(pageNum => {
+                    const files = pagesByNumber[pageNum];
+                    
+                    files.sort((a, b) => {
+                        if (a.modifiedTime && b.modifiedTime) {
+                            return new Date(b.modifiedTime) - new Date(a.modifiedTime);
+                        }
+                        const aTimeMatch = a.name.match(/-(\d{4}-\d{2}-\d{2}T[\d-]+)\.html$/);
+                        const bTimeMatch = b.name.match(/-(\d{4}-\d{2}-\d{2}T[\d-]+)\.html$/);
+                        if (aTimeMatch && bTimeMatch) {
+                            return bTimeMatch[1].localeCompare(aTimeMatch[1]);
+                        }
+                        return b.name.localeCompare(a.name);
+                    });
+                    
+                    if (files.length > 0) {
+                        latestPageFiles.push(files[0]);
+                    }
+                });
+                
+                latestPageFiles.sort((a, b) => {
+                    const aMatch = a.name.match(/newsletter-page-(\d+)-/);
+                    const bMatch = b.name.match(/newsletter-page-(\d+)-/);
+                    if (aMatch && bMatch) {
+                        return parseInt(aMatch[1]) - parseInt(bMatch[1]);
+                    }
+                    return 0;
+                });
+                
+                console.log(`Loading ${latestPageFiles.length} pages...`);
+                
+                const pagesContainer = document.getElementById('pagesContainer');
+                if (pagesContainer && latestPageFiles.length > 0) {
+                    const allExistingPages = pagesContainer.querySelectorAll('.page-wrapper');
+                    allExistingPages.forEach(page => page.remove());
+                }
+                
+                loadingOverlay.querySelector('.loading-text').textContent = `Loading ${latestPageFiles.length} pages...`;
+                
+                const loadedPageNumbers = new Set();
+                for (let i = 0; i < latestPageFiles.length; i++) {
+                    const file = latestPageFiles[i];
+                    const match = file.name.match(/newsletter-page-(\d+)-/);
+                    if (match) {
+                        const pageNum = parseInt(match[1]);
+                        
+                        if (loadedPageNumbers.has(pageNum)) {
+                            continue;
+                        }
+                        
+                        loadedPageNumbers.add(pageNum);
+                        loadingOverlay.querySelector('.loading-text').textContent = `Loading page ${i + 1} of ${latestPageFiles.length}...`;
+                        await loadPageFromGoogleDrive(pageNum, file.id);
+                        await new Promise(resolve => setTimeout(resolve, 100));
+                    }
+                }
+                
+                console.log(`Successfully loaded ${loadedPageNumbers.size} pages`);
+                
+                // Hide deleted pages
+                deletedPageIdsList.forEach(uniqueId => {
+                    const pageWrapper = document.querySelector(`[data-unique-id="${uniqueId}"]`);
+                    if (pageWrapper) {
+                        pageWrapper.style.display = 'none';
+                    }
+                });
+                
+                loadingOverlay.remove();
+                isLoadingPages = false;
+            } catch (error) {
+                console.error('Error loading saved pages:', error);
+                loadingOverlay.remove();
+                isLoadingPages = false;
+            }
+        }
+        
+        // Load pages when DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', loadSavedPages);
+        } else {
+            loadSavedPages();
+        }
+    </script>
+</body>
+</html>
+
