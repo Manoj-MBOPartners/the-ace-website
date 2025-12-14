@@ -9,6 +9,15 @@
       href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&amp;display=swap"
     />
     <style>
+      :root {
+        /* A4 canvas size (px) exported by the builder */
+        --a4-width: 793.701px;
+        --a4-height: 1122.52px;
+
+        /* Default desktop preview scale */
+        --page-scale: 0.85;
+      }
+
       * {
         box-sizing: border-box;
         margin: 0;
@@ -101,17 +110,33 @@
         min-height: calc(100vh - 200px);
       }
 
+      /* Each wrapper participates in layout at the scaled size */
+      .page-wrapper {
+        position: relative;
+        width: calc(var(--a4-width) * var(--page-scale));
+        height: calc(var(--a4-height) * var(--page-scale));
+      }
+
+      /* Inner wrapper is scaled down, but stays A4 internally */
+      .page-scale-wrapper {
+        position: absolute;
+        top: 0;
+        left: 50%;
+        width: var(--a4-width);
+        height: var(--a4-height);
+        transform: translateX(-50%) scale(var(--page-scale));
+        transform-origin: top center;
+        overflow: hidden; /* always clip to A4 boundary (prevents mobile horizontal scroll) */
+      }
+
       .newsletter-preview {
-        width: 793.701px;
-        min-height: 1122.52px;
-        height: auto;
+        width: var(--a4-width);
+        height: var(--a4-height);
         background: white;
         color: #333;
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
         position: relative;
-        overflow: visible;
-        transform: scale(0.85);
-        transform-origin: top center;
+        overflow: hidden; /* keep the A4 canvas clipped */
       }
 
       .newsletter-preview[data-page-type="gallery"] {
@@ -455,10 +480,6 @@
         align-items: center;
       }
 
-      .page-wrapper {
-        position: relative;
-      }
-
       .page-number {
         position: absolute;
         top: 960px;
@@ -466,6 +487,70 @@
         font-weight: 600;
         color: #1e3a8a;
         font-size: 14px;
+        z-index: 5;
+      }
+
+      /* Quote + quoter (styled to match theme; visibility controlled by wrapper class) */
+      .quote-text {
+        position: absolute;
+        left: 52px;
+        bottom: 80px;
+        width: 450px;
+        font-size: 14px;
+        line-height: 18px;
+        font-style: italic;
+        color: rgb(7, 10, 14);
+        margin: 0;
+        padding: 12px 14px 12px 44px;
+        background: rgba(48, 94, 159, 0.08);
+        border: 1px solid rgba(48, 94, 159, 0.18);
+        border-left: 5px solid rgb(48, 94, 159);
+        border-radius: 10px;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+        display: none; /* shown only on odd pages except page 1 */
+        z-index: 2;
+      }
+
+      .quote-text::before {
+        content: '“';
+        position: absolute;
+        left: 14px;
+        top: 8px;
+        font-size: 38px;
+        line-height: 38px;
+        font-weight: 800;
+        color: rgba(48, 94, 159, 0.85);
+        font-style: normal;
+      }
+
+      .quote-author {
+        position: absolute;
+        bottom: 40px;
+        right: 310px; /* left side of decorative-line-vertical */
+        font-size: 12px;
+        line-height: 16px;
+        font-weight: 700;
+        color: rgb(48, 94, 159);
+        margin: 0;
+        padding: 6px 10px;
+        background: rgba(255, 255, 255, 0.95);
+        border: 1px solid rgba(48, 94, 159, 0.2);
+        border-radius: 999px;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+        display: none; /* shown only on odd pages except page 1 */
+        z-index: 2;
+        white-space: nowrap;
+      }
+
+      .quote-author::before {
+        content: '— ';
+        color: rgba(48, 94, 159, 0.9);
+        font-weight: 800;
+      }
+
+      .page-wrapper.is-odd-except-first .quote-text,
+      .page-wrapper.is-odd-except-first .quote-author {
+        display: block;
       }
 
       .gallery-page {
@@ -586,267 +671,14 @@
         }
       }
 
-      @media (max-width: 768px) {
+      /* Mobile: keep A4 layout, just reduce outer padding (scale handled via JS by updating --page-scale) */
+      @media (max-width: 900px) {
         .container {
-          padding: 10px;
+          padding: 12px 8px;
         }
 
         .editor-wrapper {
-          padding: 10px;
-          background: #f5f5f5;
-        }
-
-        .newsletter-preview {
-          width: 100%;
-          max-width: 100%;
-          height: auto;
-          transform: scale(1);
-          transform-origin: top center;
-          box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        }
-
-        .newsletter-header {
-          padding: 20px 20px 0;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          position: relative;
-        }
-
-        .newsletter-content {
-          grid-template-columns: 1fr;
-          gap: 20px;
-          padding: 0 20px;
-        }
-
-        .newsletter-title-main {
-          font-size: 48px;
-          line-height: 60px;
-          min-height: 60px;
-          text-align: center;
-        }
-
-        .newsletter-title-sub {
-          font-size: 28px;
-          line-height: 36px;
-          min-height: 36px;
-          text-align: center;
-        }
-
-        .newsletter-title-wrapper {
-          width: 100%;
-          text-align: center;
-          margin-bottom: 15px;
-        }
-
-        .section-title,
-        .partnership-title,
-        .key-events-title {
-          font-size: 24px;
-          line-height: 32px;
-          margin-bottom: 10px;
-        }
-
-        .section-content,
-        .partnership-content {
-          font-size: 14px;
-          line-height: 20px;
-        }
-
-        .business-news-header {
-          font-size: 24px;
-          line-height: 28px;
-          min-height: auto;
-        }
-
-        .business-news-subtitle {
-          font-size: 20px;
-          line-height: 28px;
-        }
-
-        .business-news-content {
-          font-size: 14px;
-          line-height: 20px;
-        }
-
-        .newsletter-image-main {
-          width: 100%;
-          height: auto;
-          min-height: 200px;
-        }
-
-        .newsletter-image-bottom {
-          width: 100%;
-          height: auto;
-          min-height: 150px;
-        }
-
-        .gallery-images {
-          grid-template-columns: 1fr;
-          padding-right: 0;
-        }
-
-        .gallery-image-item {
-          height: 250px;
-        }
-
-        .layout-two-column,
-        .layout-three-column {
-          grid-template-columns: 1fr;
-          padding: 0 20px;
-        }
-
-        .layout-image-left,
-        .layout-image-right {
-          grid-template-columns: 1fr;
-          padding: 0 20px;
-        }
-
-        .page-number {
-          position: relative;
-          top: auto;
-          left: auto;
-          text-align: center;
-          margin-top: 20px;
-          margin-bottom: 10px;
-        }
-
-        .decorative-line-horizontal {
-          position: relative;
-          width: 100%;
-          left: 0;
-          top: 0;
-          margin: 15px 0;
-          transform: none;
-        }
-
-        .decorative-line-vertical {
-          display: none;
-        }
-
-        .newsletter-logo-left {
-          position: relative;
-          top: auto;
-          left: auto;
-          right: auto;
-          width: 80px;
-          height: 80px;
-          margin: 0 auto 10px;
-          order: 1;
-        }
-
-        .newsletter-logo {
-          position: relative;
-          top: auto;
-          left: auto;
-          right: auto;
-          width: 90px;
-          height: 90px;
-          margin: 0 auto 10px;
-          order: 2;
-        }
-
-        .toolbar {
-          padding: 10px 15px;
-          flex-direction: row;
-          gap: 10px;
-        }
-
-        .toolbar-title {
-          font-size: 16px;
-        }
-
-        .pages-container {
-          gap: 20px;
-        }
-      }
-
-      @media (max-width: 480px) {
-        .container {
-          padding: 5px;
-        }
-
-        .editor-wrapper {
-          padding: 5px;
-        }
-
-        .newsletter-header {
-          padding: 15px 15px 0;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-        }
-
-        .newsletter-content {
-          padding: 0 15px;
-        }
-
-        .newsletter-logo-left {
-          width: 70px;
-          height: 70px;
-        }
-
-        .newsletter-logo {
-          width: 80px;
-          height: 80px;
-        }
-
-        .decorative-line-horizontal {
-          margin: 10px 0;
-        }
-
-        .newsletter-title-main {
-          font-size: 36px;
-          line-height: 48px;
-          min-height: 48px;
-        }
-
-        .newsletter-title-sub {
-          font-size: 22px;
-          line-height: 30px;
-          min-height: 30px;
-        }
-
-        .section-title,
-        .partnership-title,
-        .key-events-title {
-          font-size: 20px;
-          line-height: 28px;
-        }
-
-        .section-content,
-        .partnership-content,
-        .business-news-content {
-          font-size: 13px;
-          line-height: 18px;
-        }
-
-        .business-news-header {
-          font-size: 20px;
-          line-height: 24px;
-        }
-
-        .business-news-subtitle {
-          font-size: 18px;
-          line-height: 24px;
-        }
-
-        .gallery-section {
-          padding: 20px 15px;
-        }
-
-        .gallery-section-title {
-          font-size: 24px;
-          margin-bottom: 15px;
-        }
-
-        .gallery-image-item {
-          height: 200px;
-        }
-
-        .events-list-preview li {
-          font-size: 12px;
-          line-height: 16px;
+          padding: 12px 8px;
         }
       }
     </style>
@@ -866,6 +698,32 @@
 
     <script>
         const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwDx2NWivsXfQ-V4Lhs9W2Qed0v2hbQ3R1yRRcVD5fUnGt-ETzOrv6GOpfQsYK6rRl4/exec';
+
+        // Mobile behavior: keep pages as true A4 layouts; just scale down to fit the viewport.
+        // Users can pinch-zoom to read.
+        const A4_WIDTH_PX = 793.701;
+        const DESKTOP_DEFAULT_SCALE = 0.85;
+
+        function updatePageScale() {
+            try {
+                const isNarrow = window.matchMedia('(max-width: 900px)').matches;
+                if (!isNarrow) {
+                    document.documentElement.style.setProperty('--page-scale', String(DESKTOP_DEFAULT_SCALE));
+                    return;
+                }
+
+                const viewportWidth = Math.min(window.innerWidth || 0, document.documentElement.clientWidth || 0) || window.innerWidth;
+                const available = Math.max(240, viewportWidth - 24);
+                const scale = Math.min(1, Math.max(0.2, available / A4_WIDTH_PX));
+                document.documentElement.style.setProperty('--page-scale', scale.toFixed(4));
+            } catch (e) {
+                document.documentElement.style.setProperty('--page-scale', String(DESKTOP_DEFAULT_SCALE));
+            }
+        }
+
+        window.addEventListener('resize', () => {
+            window.requestAnimationFrame(updatePageScale);
+        });
         
         // Initialize IndexedDB for image storage
         let imageDB = null;
@@ -1192,8 +1050,10 @@
                 }
                 
                 pageWrapper.innerHTML = `
-                    <div class="page-number">Page ${pageNum}</div>
-                    ${pageElement.outerHTML}
+                    <div class="page-scale-wrapper">
+                        ${pageElement.outerHTML}
+                        <div class="page-number">Page ${pageNum}</div>
+                    </div>
                 `;
                 
                 document.getElementById('pagesContainer').appendChild(pageWrapper);
@@ -1222,6 +1082,7 @@
             
             try {
                 console.log('Loading saved pages from Google Drive...');
+                updatePageScale();
                 
                 let pageFiles = [];
                 try {
@@ -1358,6 +1219,7 @@
                 });
                 
                 loadingOverlay.remove();
+                updatePageScale();
                 isLoadingPages = false;
             } catch (error) {
                 console.error('Error loading saved pages:', error);
