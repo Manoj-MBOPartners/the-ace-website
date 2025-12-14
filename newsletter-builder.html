@@ -492,14 +492,14 @@
       }
 
       .section-content {
-        font-size: 19px;
-        line-height: 26px;
+        font-size: 15px;
+        line-height: 20px;
         color: rgb(7, 10, 14);
         margin: 0 0 20px 0;
         text-align: left;
         font-weight: 400;
         font-family: 'Poppins', sans-serif;
-        min-height: 26px;
+        min-height: 22px;
       }
 
       .business-news-header {
@@ -545,8 +545,8 @@
       }
 
       .partnership-content {
-        font-size: 13px;
-        line-height: 18px;
+        font-size: 15px;
+        line-height: 20px;
         color: rgb(7, 10, 14);
         margin: 0;
         font-weight: 400;
@@ -2087,6 +2087,32 @@
                 
                 console.log(`Page ${pageNum}: Found .newsletter-preview element`);
                 
+                // Clean up paragraph content - remove unwanted div wrappers and empty p tags
+                // This fixes issues where contenteditable adds div wrappers
+                pageElement.querySelectorAll('p.partnership-content, p.section-content, p.business-news-content').forEach(para => {
+                    // Remove div wrappers inside paragraphs - unwrap them
+                    const divs = para.querySelectorAll('div');
+                    divs.forEach(div => {
+                        // Unwrap the div - move all its children to its parent, then remove the div
+                        const parent = div.parentNode;
+                        while (div.firstChild) {
+                            parent.insertBefore(div.firstChild, div);
+                        }
+                        div.remove();
+                    });
+                    
+                    // Remove empty p tags inside the paragraph
+                    const emptyPs = para.querySelectorAll('p');
+                    emptyPs.forEach(p => {
+                        // Check if p is empty (no text content and no meaningful children)
+                        const hasText = p.textContent.trim().length > 0;
+                        const hasContent = p.querySelector('br, img, strong, em, span, a');
+                        if (!hasText && !hasContent) {
+                            p.remove();
+                        }
+                    });
+                });
+                
                 // Ensure all editable elements have contenteditable attribute
                 // This is important because saved HTML might not have it
                 const editableSelectors = [
@@ -2110,9 +2136,17 @@
                     elements.forEach(el => {
                         if (!el.hasAttribute('contenteditable')) {
                             el.setAttribute('contenteditable', 'true');
-                            // Restore placeholder if it exists and element is empty
+                            // Restore placeholder ONLY if element is truly empty
+                            // Don't overwrite existing content
                             const placeholder = el.getAttribute('data-placeholder');
-                            if (placeholder && !el.textContent.trim() && !el.innerHTML.trim()) {
+                            const hasExistingContent = el.textContent.trim().length > 0 || 
+                                                      el.innerHTML.trim().length > 0 ||
+                                                      Array.from(el.childNodes).some(node => 
+                                                          node.nodeType === Node.TEXT_NODE && node.textContent.trim().length > 0
+                                                      );
+                            
+                            // Only set placeholder if element is completely empty
+                            if (placeholder && !hasExistingContent) {
                                 if (el.classList.contains('business-news-header')) {
                                     // Special handling for multi-line placeholder
                                     el.innerHTML = placeholder.replace(/&#10;/g, '<br>');
@@ -2120,6 +2154,7 @@
                                     el.textContent = placeholder.replace(/&#10;/g, '\n');
                                 }
                             }
+                            // If element has content, preserve it as-is (don't modify innerHTML or textContent)
                         }
                     });
                 });
@@ -2796,7 +2831,12 @@
             return `
                 <div class="newsletter-preview" data-page-type="content">
                     <div class="decorative-line-vertical"></div>
-                    
+                                        <div class="newsletter-header">
+                        <div class="newsletter-title-wrapper">
+                            <h2 class="newsletter-title-sub editable" contenteditable="true" data-placeholder="COMPANY">COMPANY</h2>
+                            <div class="decorative-line-horizontal-title"></div>
+                        </div>
+                    </div>
                     <div class="newsletter-content" style="padding-top: 40px;">
                         <div class="newsletter-left-column">
                             <div style="margin-top: 20px;">
@@ -2814,22 +2854,16 @@
                                 <p class="partnership-content editable" contenteditable="true" data-placeholder="Enter partnership content...">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed mauris mi, sodales sed scelerisque ac, aliquet at tortor. Sed vitae ullamcorper leo. Nunc condimentum, augue sed finibus scelerisque, augue nulla faucibus nisi, a tristique augue felis at est.</p>
                             </div>
 
-                            <div class="newsletter-image-bottom editable-image" onclick="changeImage(this, 'bottom')">
-                                <input type="file" accept="image/*" class="image-upload-input">
-                                <img src="https://media-public.canva.com/MADGv-Z47yI/7/screen.jpg" alt="People Sitting on Chairs Beside their Desks in an office" />
-                            </div>
                         </div>
 
                         <div class="newsletter-right-column">
                             <div style="margin-top: 20px;">
                                 <h2 class="business-news-header editable" contenteditable="true" data-placeholder="INGOUDE&#10;BUSINESS&#10;NEWS">INGOUDE<br>BUSINESS<br>NEWS</h2>
                                 <h3 class="business-news-subtitle editable" contenteditable="true" data-placeholder="2023-2024">2023-2024</h3>
-                                <p class="business-news-content editable" contenteditable="true" data-placeholder="Enter business news...">Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
                             </div>
 
                             <div style="margin-top: 60px;">
                                 <h2 class="key-events-title editable" contenteditable="true" data-placeholder="KEY EVENTS">KEY EVENTS</h2>
-                                <p class="section-content editable" contenteditable="true" data-placeholder="Enter event description..." style="margin-bottom: 10px;">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed mauris mi, sodales sed scelerisque ac, aliquet at tortor.</p>
                                 <ul class="events-list-preview">
                                     <li contenteditable="true" class="editable" data-placeholder="Event item 1">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed mauris mi, sodales sed scelerisque ac, aliquet at tortor.</li>
                                     <li contenteditable="true" class="editable" data-placeholder="Event item 2">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed mauris mi, sodales sed scelerisque ac, aliquet at tortor.</li>
@@ -3333,19 +3367,20 @@
 
             element.addEventListener('blur', function() {
                     // Accept whitespace as valid content - only restore placeholder if truly empty
-                    // Check if element has any text nodes with content (including whitespace)
+                    // Check if element has any text nodes with content (including whitespace) or HTML
                     const hasContent = Array.from(this.childNodes).some(node => 
                         node.nodeType === Node.TEXT_NODE && node.textContent.length > 0
-                    ) || this.textContent.length > 0;
+                    ) || this.textContent.length > 0 || this.innerHTML.trim().length > 0;
                     
-                    // Only restore placeholder if element is truly empty (no text nodes)
+                    // Only restore placeholder if element is truly empty (no text nodes or HTML)
                     if (!hasContent) {
                         if (placeholder) {
                             this.textContent = placeholder.replace(/&#10;/g, '\n');
                     this.classList.add('empty-placeholder');
                         }
                 } else {
-                        // Has content (including whitespace), keep it and remove placeholder class
+                        // Has content (including whitespace or HTML), keep it and remove placeholder class
+                        // Preserve innerHTML to maintain any formatting
                     this.classList.remove('empty-placeholder');
                 }
             });
@@ -3354,15 +3389,21 @@
                 const placeholderText = placeholder ? placeholder.replace(/&#10;/g, '\n') : '';
                 const hasContent = Array.from(element.childNodes).some(node => 
                     node.nodeType === Node.TEXT_NODE && node.textContent.length > 0
-                ) || element.textContent.length > 0;
+                ) || element.textContent.length > 0 || element.innerHTML.trim().length > 0;
                 
                 // Only set placeholder if element is truly empty (no text nodes) or matches placeholder exactly
+                // Use textContent for comparison but preserve innerHTML for actual content
                 const matchesPlaceholder = element.textContent.trim() === placeholderText.trim();
                 if ((!hasContent || matchesPlaceholder) && placeholder) {
-                    element.textContent = placeholder.replace(/&#10;/g, '\n');
-                    element.classList.add('empty-placeholder');
+                    // For paragraph elements, preserve any HTML structure that might exist
+                    // Only set placeholder if truly empty
+                    if (!hasContent) {
+                        element.textContent = placeholder.replace(/&#10;/g, '\n');
+                        element.classList.add('empty-placeholder');
+                    }
                 } else if (hasContent) {
-                    // Has content (including whitespace), keep it
+                    // Has content (including whitespace or HTML), keep it and preserve innerHTML
+                    // Don't overwrite with textContent as it would strip HTML formatting
                     element.classList.remove('empty-placeholder');
                 }
             });
@@ -3375,7 +3416,109 @@
                     e.preventDefault();
                     const text = (e.clipboardData || window.clipboardData).getData('text');
                     document.execCommand('insertText', false, text);
+                    
+                    // Clean up div wrappers after paste (for paragraph elements)
+                    if (this.classList.contains('partnership-content') || 
+                        this.classList.contains('section-content') || 
+                        this.classList.contains('business-news-content')) {
+                        setTimeout(() => {
+                            const divs = this.querySelectorAll('div');
+                            divs.forEach(div => {
+                                const parent = div.parentNode;
+                                while (div.firstChild) {
+                                    parent.insertBefore(div.firstChild, div);
+                                }
+                                div.remove();
+                            });
+                            const emptyPs = this.querySelectorAll('p');
+                            emptyPs.forEach(p => {
+                                if (!p.textContent.trim() && !p.querySelector('br, img, strong, em, span, a')) {
+                                    p.remove();
+                                }
+                            });
+                        }, 0);
+                    }
                 });
+                }
+                
+                // Add input and blur handlers to clean up div wrappers in paragraph elements
+                if (element.classList.contains('partnership-content') || 
+                    element.classList.contains('section-content') || 
+                    element.classList.contains('business-news-content')) {
+                    if (!element.hasAttribute('data-cleanup-handler')) {
+                        element.setAttribute('data-cleanup-handler', 'true');
+                        
+                        // Function to clean up div wrappers and empty p tags
+                        const cleanupDivs = (targetElement) => {
+                            const divs = targetElement.querySelectorAll('div');
+                            if (divs.length > 0) {
+                                divs.forEach(div => {
+                                    // Unwrap the div - move all its children to its parent, then remove the div
+                                    const parent = div.parentNode;
+                                    while (div.firstChild) {
+                                        parent.insertBefore(div.firstChild, div);
+                                    }
+                                    div.remove();
+                                });
+                            }
+                            
+                            // Remove empty p tags
+                            const emptyPs = targetElement.querySelectorAll('p');
+                            emptyPs.forEach(p => {
+                                if (!p.textContent.trim() && !p.querySelector('br, img, strong, em, span, a')) {
+                                    p.remove();
+                                }
+                            });
+                        };
+                        
+                        // Clean up on input (real-time)
+                        element.addEventListener('input', function() {
+                            // Use setTimeout to avoid interfering with the current input
+                            setTimeout(() => {
+                                cleanupDivs(this);
+                            }, 0);
+                        });
+                        
+                        // Clean up on blur (when user finishes editing)
+                        element.addEventListener('blur', function() {
+                            cleanupDivs(this);
+                        });
+                        
+                        // Handle keydown - ensure Enter creates <br> instead of <div> or <p>
+                        element.addEventListener('keydown', function(e) {
+                            if (e.key === 'Enter') {
+                                e.preventDefault();
+                                // Insert <br> at cursor position
+                                document.execCommand('insertHTML', false, '<br>');
+                            }
+                        });
+                        
+                        // Use MutationObserver to catch div additions in real-time
+                        const observer = new MutationObserver(function(mutations) {
+                            let shouldCleanup = false;
+                            mutations.forEach(function(mutation) {
+                                mutation.addedNodes.forEach(function(node) {
+                                    if (node.nodeType === Node.ELEMENT_NODE) {
+                                        if (node.tagName === 'DIV' || node.querySelector && node.querySelector('div')) {
+                                            shouldCleanup = true;
+                                        }
+                                    }
+                                });
+                            });
+                            
+                            if (shouldCleanup) {
+                                setTimeout(() => {
+                                    cleanupDivs(element);
+                                }, 0);
+                            }
+                        });
+                        
+                        // Observe changes to the element
+                        observer.observe(element, {
+                            childList: true,
+                            subtree: true
+                        });
+                    }
                 }
             });
         }
@@ -3447,7 +3590,30 @@
         // Save HTML pages to Google Drive
         async function downloadPDF() {
             const saveButton = document.getElementById('saveButton');
-            const pages = document.querySelectorAll('.newsletter-preview');
+            
+            // Get deleted page IDs from localStorage
+            const deletedPageIds = JSON.parse(localStorage.getItem('deletedPageIds') || '[]');
+            
+            // Get all pages, but filter out deleted ones
+            const allPages = document.querySelectorAll('.newsletter-preview');
+            const pages = Array.from(allPages).filter(page => {
+                // Find the parent page-wrapper
+                const pageWrapper = page.closest('.page-wrapper');
+                if (!pageWrapper) return true; // If no wrapper, include it (shouldn't happen)
+                
+                // Check if the wrapper is hidden (deleted)
+                if (pageWrapper.style.display === 'none') {
+                    return false; // Exclude deleted pages
+                }
+                
+                // Check if the unique ID is in the deleted list
+                const uniqueId = pageWrapper.getAttribute('data-unique-id');
+                if (uniqueId && deletedPageIds.includes(uniqueId)) {
+                    return false; // Exclude deleted pages
+                }
+                
+                return true; // Include visible, non-deleted pages
+            });
             
             if (pages.length === 0) {
                 alert('No pages to save!');
@@ -3561,6 +3727,63 @@
                     });
                     
                     console.log(`[Save] Page ${pageNumber} image conversion: ${convertedCount} converted, ${localAssetCount} local/small, ${skippedCount} skipped (large data URLs)`);
+                    
+                    // Clean up paragraph content - remove unwanted div wrappers and empty p tags
+                    // This must run BEFORE removing contenteditable attributes to ensure proper cleanup
+                    pageClone.querySelectorAll('p.partnership-content, p.section-content, p.business-news-content').forEach(para => {
+                        // Remove div wrappers inside paragraphs - unwrap them recursively
+                        let divs = para.querySelectorAll('div');
+                        while (divs.length > 0) {
+                            divs.forEach(div => {
+                                // Unwrap the div - move all its children to its parent, then remove the div
+                                const parent = div.parentNode;
+                                // Add a space before unwrapping if needed to preserve word spacing
+                                if (div.previousSibling && div.previousSibling.nodeType === Node.TEXT_NODE && 
+                                    div.nextSibling && div.nextSibling.nodeType === Node.TEXT_NODE) {
+                                    // Both siblings are text, ensure space between them
+                                    if (!div.previousSibling.textContent.endsWith(' ') && 
+                                        !div.nextSibling.textContent.startsWith(' ')) {
+                                        parent.insertBefore(document.createTextNode(' '), div);
+                                    }
+                                }
+                                while (div.firstChild) {
+                                    parent.insertBefore(div.firstChild, div);
+                                }
+                                div.remove();
+                            });
+                            // Check again for any remaining divs (in case unwrapping created new ones)
+                            divs = para.querySelectorAll('div');
+                        }
+                        
+                        // Remove empty p tags inside the paragraph
+                        const emptyPs = para.querySelectorAll('p');
+                        emptyPs.forEach(p => {
+                            // Check if p is empty (no text content and no meaningful children)
+                            const hasText = p.textContent.trim().length > 0;
+                            const hasContent = p.querySelector('br, img, strong, em, span, a');
+                            if (!hasText && !hasContent) {
+                                p.remove();
+                            }
+                        });
+                        
+                        // Clean up any remaining empty elements
+                        const allElements = para.querySelectorAll('*');
+                        allElements.forEach(el => {
+                            // Remove elements that are empty and not meaningful
+                            if (el.tagName !== 'BR' && el.tagName !== 'IMG' && 
+                                !el.textContent.trim() && el.children.length === 0) {
+                                // Check if it's a formatting element that might be needed
+                                if (!['STRONG', 'EM', 'SPAN', 'A', 'B', 'I', 'U'].includes(el.tagName)) {
+                                    el.remove();
+                                }
+                            }
+                        });
+                        
+                        // Remove any data attributes that shouldn't be in saved content
+                        para.removeAttribute('data-initialized');
+                        para.removeAttribute('data-paste-handler');
+                        para.removeAttribute('data-cleanup-handler');
+                    });
                     
                     // Remove editable attributes and event handlers
                     pageClone.querySelectorAll('[contenteditable]').forEach(el => {
