@@ -523,6 +523,86 @@
         min-height: 41px;
       }
 
+      /* Quote + quoter (ONLY for odd pages except page 1) */
+      .quote-text {
+        position: absolute;
+        left: 52px;
+        bottom: 80px;
+        width: 450px;
+        font-size: 14px;
+        line-height: 18px;
+        font-style: italic;
+        color: rgb(7, 10, 14);
+        margin: 0;
+        padding: 12px 14px 12px 44px;
+        background: rgba(48, 94, 159, 0.08);
+        border: 1px solid rgba(48, 94, 159, 0.18);
+        border-left: 5px solid rgb(48, 94, 159);
+        border-radius: 10px;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+        display: none; /* shown only on odd pages except page 1 */
+        z-index: 2;
+      }
+
+      .quote-text::before {
+        content: '“';
+        position: absolute;
+        left: 14px;
+        top: 8px;
+        font-size: 38px;
+        line-height: 38px;
+        font-weight: 800;
+        color: rgba(48, 94, 159, 0.85);
+        font-style: normal;
+      }
+
+      .quote-author {
+        position: absolute;
+        bottom: 40px;
+        /* place it to the LEFT side of decorative-line-vertical (which is positioned via right: 283px) */
+        right: 310px;
+        font-size: 12px;
+        line-height: 16px;
+        font-weight: 700;
+        color: rgb(48, 94, 159);
+        margin: 0;
+        padding: 6px 10px;
+        background: rgba(255, 255, 255, 0.95);
+        border: 1px solid rgba(48, 94, 159, 0.2);
+        border-radius: 999px;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+        display: none; /* shown only on odd pages except page 1 */
+        z-index: 2;
+        white-space: nowrap;
+      }
+
+      .quote-author::before {
+        content: '— ';
+        color: rgba(48, 94, 159, 0.9);
+        font-weight: 800;
+      }
+
+      /* Odd pages except page 1 */
+      .page-wrapper.is-odd-except-first .quote-text,
+      .page-wrapper.is-odd-except-first .quote-author {
+        display: block;
+      }
+
+      .page-wrapper.is-odd-except-first .business-news-header {
+        font-size: 32px;
+        min-height: auto;
+        height: auto;
+        margin-top: 10px;
+        margin-bottom: 10px;
+      }
+
+      .page-wrapper.is-odd-except-first .business-news-subtitle {
+        font-size: 20px;
+        line-height: 28px;
+        min-height: auto;
+        margin-bottom: 0;
+      }
+
       .business-news-content {
         font-size: 16px;
         line-height: 23px;
@@ -2220,22 +2300,6 @@
                 document.getElementById('pagesContainer').appendChild(pageWrapper);
                 pageCounter = Math.max(pageCounter, parseInt(pageNum));
                 
-                // Restore "Add Event" button if it's missing (it gets removed when saving)
-                pageWrapper.querySelectorAll('.events-list-preview').forEach(eventsList => {
-                    // Check if the button already exists in the parent container
-                    const parentContainer = eventsList.parentElement;
-                    const existingBtn = parentContainer.querySelector('.add-event-btn');
-                    if (!existingBtn) {
-                        // Create and add the button after the events list
-                        const addEventBtn = document.createElement('button');
-                        addEventBtn.className = 'add-event-btn';
-                        addEventBtn.textContent = '+ Add Event';
-                        addEventBtn.setAttribute('onclick', 'addEventItem(this)');
-                        // Insert after the events list
-                        parentContainer.insertBefore(addEventBtn, eventsList.nextSibling);
-                    }
-                });
-                
                 // Initialize editable elements for this newly loaded page
                 // Target only elements within this page wrapper to avoid conflicts
                 setTimeout(() => {
@@ -2889,6 +2953,10 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- Quote + Quoter (visible only for odd pages except page 1 via CSS class on page wrapper) -->
+                    <p class="quote-text editable" contenteditable="true" data-placeholder="Add quote..."></p>
+                    <div class="quote-author editable" contenteditable="true" data-placeholder="- Quoter"></div>
                 </div>
             `;
         }
@@ -3124,6 +3192,29 @@
             const pages = Array.from(document.querySelectorAll('.page-wrapper'))
                 .filter(page => page.style.display !== 'none');
             
+            const ensureQuoteElements = (pageWrapper) => {
+                const preview = pageWrapper.querySelector('.newsletter-preview[data-page-type="content"]');
+                if (!preview) return;
+
+                let quote = preview.querySelector('.quote-text');
+                if (!quote) {
+                    quote = document.createElement('p');
+                    quote.className = 'quote-text editable';
+                    quote.setAttribute('contenteditable', 'true');
+                    quote.setAttribute('data-placeholder', 'Add quote...');
+                    preview.appendChild(quote);
+                }
+
+                let author = preview.querySelector('.quote-author');
+                if (!author) {
+                    author = document.createElement('div');
+                    author.className = 'quote-author editable';
+                    author.setAttribute('contenteditable', 'true');
+                    author.setAttribute('data-placeholder', '- Quoter');
+                    preview.appendChild(author);
+                }
+            };
+
             pages.forEach((page, index) => {
                 const pageNumber = page.querySelector('.page-number');
                 const pageId = index + 1;
@@ -3136,6 +3227,14 @@
                     page.setAttribute('data-unique-id', uniqueId);
                 }
                 pageNumber.textContent = `Page ${pageId}`;
+
+                // Page classification for styling (based on DISPLAY page number)
+                page.classList.toggle('is-first-page', pageId === 1);
+                page.classList.toggle('is-odd-except-first', pageId > 1 && pageId % 2 === 1);
+
+                // Ensure quote elements exist (they will be shown only on is-odd-except-first)
+                ensureQuoteElements(page);
+
                 const deleteBtn = page.querySelector('.btn-delete-page');
                 if (deleteBtn) {
                     deleteBtn.setAttribute('data-page-id', originalPageId);
@@ -3158,6 +3257,9 @@
                     }
                 }
             });
+
+            // Ensure any newly injected editable elements get initialized (placeholders, paste handlers, etc.)
+            initializeEditableElements();
         }
 
         // Initialize editable elements
@@ -3498,15 +3600,6 @@
                         // Clean up on blur (when user finishes editing)
                         element.addEventListener('blur', function() {
                             cleanupDivs(this);
-                        });
-                        
-                        // Handle keydown - ensure Enter creates <br> instead of <div> or <p>
-                        element.addEventListener('keydown', function(e) {
-                            if (e.key === 'Enter') {
-                                e.preventDefault();
-                                // Insert <br> at cursor position
-                                document.execCommand('insertHTML', false, '<br>');
-                            }
                         });
                         
                         // Use MutationObserver to catch div additions in real-time
