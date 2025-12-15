@@ -113,41 +113,34 @@
       /* Each wrapper participates in layout at the scaled size */
       .page-wrapper {
         position: relative;
-        width: calc(var(--a4-width) * var(--page-scale));
-        /* Height is set dynamically in JS based on scaled content to avoid trimming */
-        min-height: calc(var(--a4-height) * var(--page-scale));
-        /* Shadow belongs to the outer wrapper so it doesn't get clipped by the A4 clipper */
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-        background: white;
       }
 
-      /* Inner wrapper is scaled down, but stays A4 internally */
+      /* Wrapper for each page's content (kept unscaled like newsletter-builder; scaling is on .newsletter-preview) */
       .page-scale-wrapper {
-        position: absolute;
-        top: 0;
-        left: 50%;
-        width: var(--a4-width);
-        min-height: var(--a4-height);
-        height: auto;
-        transform: translateX(-50%) scale(var(--page-scale));
-        transform-origin: top center;
-        overflow-x: hidden;
-        overflow-y: visible;
+        position: relative;
       }
 
       .newsletter-preview {
         width: var(--a4-width);
         min-height: var(--a4-height);
         height: auto;
-        background: transparent;
+        background: white;
         color: #333;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
         position: relative;
         overflow-x: hidden;
         overflow-y: visible;
+        transform: scale(var(--page-scale));
+        transform-origin: top center;
       }
 
       .newsletter-preview[data-page-type="gallery"] {
         overflow-y: visible;
+      }
+
+      /* Builder-exported helper: file inputs should never show in the viewer */
+      .image-upload-input {
+        display: none !important;
       }
 
       .newsletter-preview::before {
@@ -323,6 +316,11 @@
         z-index: 0;
       }
 
+      /* Selection-based page: keep vertical bar behind content boxes/images (same as builder) */
+      .newsletter-preview[data-page-template="selection"] .decorative-line-vertical {
+        z-index: 0;
+      }
+
       .newsletter-preview[data-page-type="gallery"] .gallery-image-item {
         position: relative;
         z-index: 1;
@@ -409,15 +407,19 @@
       .page-wrapper.odd-page .business-news-header {
         font-size: 32px;
         line-height: 40px;
-        min-height: auto;
-        height: auto;
+        /* Match desired odd-page spacing */
+        margin-top: 10px;
+        margin-bottom: 10px;
+        /* Keep header from expanding to the 108px base min-height */
+        min-height: 100px;
       }
 
       .page-wrapper.odd-page .business-news-subtitle {
         font-size: 22px;
         line-height: 30px;
+        margin-top: 10px;
+        margin-bottom: 10px;
         min-height: auto;
-        height: auto;
       }
 
       .business-news-content {
@@ -630,6 +632,11 @@
         padding: 0 46px;
       }
 
+      /* Content layout helper: input below image (two-column layout) */
+      .layout-two-column .two-column-below-image-input {
+        min-height: 120px;
+      }
+
       .layout-three-column {
         display: grid;
         grid-template-columns: 1fr 1fr 1fr;
@@ -644,11 +651,165 @@
         padding: 0 46px;
       }
 
+      /* Content layout helper: image + input stacked in left column (image-left layout) */
+      .layout-image-left .image-left-media-stack {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        min-width: 0;
+      }
+
+      .layout-image-left .image-left-below-input {
+        min-height: 120px;
+      }
+
       .layout-image-right {
         display: grid;
         grid-template-columns: 2fr 1fr;
         gap: 30px;
         padding: 0 46px;
+      }
+
+      /* Alternating image + text page (image-left then image-right) */
+      .alternating-page {
+        display: flex;
+        flex-direction: column;
+        gap: 34px;
+        padding: 40px 0 0 0;
+      }
+
+      .alternating-block {
+        display: grid;
+        grid-template-columns: 1fr 2fr;
+        gap: 30px;
+        padding: 0 46px;
+        align-items: center;
+      }
+
+      .alternating-block.reverse {
+        grid-template-columns: 2fr 1fr;
+      }
+
+      .alternating-image {
+        width: 100%;
+        height: 300px;
+        border-radius: 6px;
+        overflow: hidden;
+        background: #e5e7eb;
+      }
+
+      .alternating-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
+
+      .alternating-title {
+        font-size: 28px;
+        font-weight: 800;
+        color: rgb(48, 94, 159);
+        margin: 0 0 10px 0;
+        text-transform: uppercase;
+        font-family: 'Poppins', sans-serif;
+      }
+
+      .alternating-content {
+        font-size: 14px;
+        line-height: 1.65;
+        color: #111827;
+        margin: 0;
+      }
+
+      /* Selection-based page (from builder) */
+      .newsletter-preview[data-page-template="selection"] {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .selection-page {
+        flex: 1 1 auto;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        padding: 12px 46px 60px;
+        position: relative;
+      }
+
+      .selection-block {
+        flex: 1 1 0;
+        min-height: 0;
+        display: grid;
+        grid-template-columns: 4fr 6fr;
+        gap: 30px;
+        align-items: stretch;
+      }
+
+      .selection-block.reverse {
+        grid-template-columns: 6fr 4fr;
+      }
+
+      .selection-image {
+        width: 100%;
+        height: 100%;
+        min-height: 0;
+        border-radius: 6px;
+        overflow: hidden;
+        background: #e5e7eb;
+      }
+
+      .selection-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
+
+      .selection-text {
+        height: 100%;
+        min-height: 0;
+        display: grid;
+        grid-template-rows: auto 1fr;
+        align-content: start;
+        gap: 8px;
+      }
+
+      .selection-text .alternating-title {
+        margin: 0;
+      }
+
+      .selection-content-box {
+        height: 100%;
+        max-height: 100%;
+        min-height: 0;
+        border: none;
+        border-radius: 4px;
+        padding: 0;
+        background: transparent;
+        font-size: 15px;
+        line-height: 20px;
+        color: rgb(7, 10, 14);
+        font-weight: 400;
+        font-family: 'Poppins', sans-serif;
+        overflow: visible;
+        outline: none;
+        box-sizing: border-box;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+
+      .selection-divider {
+        height: 3px;
+        background: rgb(48, 94, 159);
+        border-radius: 2px;
+        width: 100%;
+        flex: 0 0 3px;
+      }
+
+      /* Builder-only UI: never show in viewer */
+      .selection-add-btn {
+        display: none !important;
       }
 
       @media print {
@@ -723,7 +884,6 @@
                 const isNarrow = window.matchMedia('(max-width: 900px)').matches;
                 if (!isNarrow) {
                     document.documentElement.style.setProperty('--page-scale', String(DESKTOP_DEFAULT_SCALE));
-                    syncPageWrapperSizes();
                     return;
                 }
 
@@ -731,26 +891,9 @@
                 const available = Math.max(240, viewportWidth - 24);
                 const scale = Math.min(1, Math.max(0.2, available / A4_WIDTH_PX));
                 document.documentElement.style.setProperty('--page-scale', scale.toFixed(4));
-                syncPageWrapperSizes();
             } catch (e) {
                 document.documentElement.style.setProperty('--page-scale', String(DESKTOP_DEFAULT_SCALE));
-                syncPageWrapperSizes();
             }
-        }
-
-        function syncPageWrapperSizes() {
-            // Since transforms don't affect layout size, we explicitly size .page-wrapper to the
-            // transformed (scaled) bounding box of .page-scale-wrapper, preventing bottom trimming
-            // and page overlap when content grows.
-            const wrappers = document.querySelectorAll('.page-wrapper');
-            wrappers.forEach(wrapper => {
-                const scaleWrapper = wrapper.querySelector('.page-scale-wrapper');
-                if (!scaleWrapper) return;
-                const rect = scaleWrapper.getBoundingClientRect();
-                if (!rect || !rect.height || !rect.width) return;
-                wrapper.style.height = `${Math.ceil(rect.height)}px`;
-                wrapper.style.width = `${Math.ceil(rect.width)}px`;
-            });
         }
 
         window.addEventListener('resize', () => {
@@ -1089,7 +1232,6 @@
                 `;
                 
                 document.getElementById('pagesContainer').appendChild(pageWrapper);
-                syncPageWrapperSizes();
                 
                 console.log(`Successfully loaded page ${pageNum}`);
             } catch (error) {
@@ -1253,7 +1395,6 @@
                 
                 loadingOverlay.remove();
                 updatePageScale();
-                syncPageWrapperSizes();
                 isLoadingPages = false;
             } catch (error) {
                 console.error('Error loading saved pages:', error);
