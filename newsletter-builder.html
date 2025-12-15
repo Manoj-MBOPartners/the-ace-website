@@ -441,6 +441,11 @@
         z-index: 0;
       }
 
+      /* Selection-based page: keep bar position same, but ensure it stays BEHIND image boxes */
+      .newsletter-preview[data-page-template="selection"] .decorative-line-vertical {
+        z-index: 0;
+      }
+
       .newsletter-preview[data-page-type="gallery"] .gallery-image-item {
         position: relative;
         z-index: 1;
@@ -829,6 +834,27 @@
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
       }
 
+      .add-page-controls {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+
+      .page-type-select {
+        padding: 12px 14px;
+        border: 1px solid #e5e7eb;
+        border-radius: 6px;
+        font-size: 14px;
+        font-weight: 600;
+        font-family: 'Poppins', sans-serif;
+        color: #111827;
+        background: white;
+        cursor: pointer;
+        min-width: 220px;
+      }
+
       .btn-add-page {
         padding: 14px 28px;
         background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
@@ -1001,6 +1027,12 @@
         padding: 0 46px;
       }
 
+      /* Content layout helper: allow an input box below the image for the two-column layout */
+      .layout-two-column .two-column-below-image-input {
+        min-height: 120px;
+        overflow: visible;
+      }
+
       .layout-three-column {
         display: grid;
         grid-template-columns: 1fr 1fr 1fr;
@@ -1020,6 +1052,221 @@
         grid-template-columns: 2fr 1fr;
         gap: 30px;
         padding: 0 46px;
+      }
+
+      /* Content layout helper: allow an input box below the image for image-left layout */
+      .layout-image-left .image-left-media-stack {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        min-width: 0;
+      }
+
+      .layout-image-left .image-left-below-input {
+        min-height: 120px;
+        overflow: visible;
+      }
+
+      /* Content pages: keep same layout, but make existing text areas tall so user can type across the whole page */
+      .newsletter-preview[data-page-template="content"] .layout-single-column > div:last-child {
+        display: flex;
+        flex-direction: column;
+        min-height: 620px; /* provides a big input area without adding new sections */
+      }
+
+      .newsletter-preview[data-page-template="content"] .layout-single-column > div:last-child .section-content {
+        flex: 1;
+        min-height: 520px;
+      }
+
+      .newsletter-preview[data-page-template="content"] .layout-two-column .newsletter-right-column > div:last-child {
+        display: flex;
+        flex-direction: column;
+        min-height: 520px;
+      }
+
+      .newsletter-preview[data-page-template="content"] .layout-two-column .newsletter-right-column > div:last-child .section-content {
+        flex: 1;
+        min-height: 420px;
+      }
+
+      .newsletter-preview[data-page-template="content"] .layout-image-left > div:last-child,
+      .newsletter-preview[data-page-template="content"] .layout-image-right > div:first-child {
+        display: flex;
+        flex-direction: column;
+        min-height: 520px;
+      }
+
+      .newsletter-preview[data-page-template="content"] .layout-image-left > div:last-child .section-content,
+      .newsletter-preview[data-page-template="content"] .layout-image-right > div:first-child .section-content {
+        flex: 1;
+        min-height: 420px;
+      }
+
+      /* Alternating image + text page (image-left then image-right) */
+      .alternating-page {
+        display: flex;
+        flex-direction: column;
+        gap: 34px;
+        padding: 40px 0 0 0;
+      }
+
+      .alternating-block {
+        display: grid;
+        grid-template-columns: 1fr 2fr;
+        gap: 30px;
+        padding: 0 46px;
+        align-items: center;
+      }
+
+      .alternating-block.reverse {
+        grid-template-columns: 2fr 1fr;
+      }
+
+      .alternating-image {
+        width: 100%;
+        height: 300px;
+        border-radius: 6px;
+        overflow: hidden;
+        background: #e5e7eb;
+      }
+
+      .alternating-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
+
+      .alternating-title {
+        font-size: 28px;
+        font-weight: 800;
+        color: rgb(48, 94, 159);
+        margin: 0 0 10px 0;
+        text-transform: uppercase;
+        font-family: 'Poppins', sans-serif;
+      }
+
+      .alternating-content {
+        font-size: 14px;
+        line-height: 1.65;
+        color: #111827;
+        margin: 0;
+      }
+
+      /* Selection-based alternating image + text (30/70 split + equal heights + divider bars) */
+      .selection-page {
+        flex: 1 1 auto;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        padding: 12px 46px 60px; /* bottom room for floating "+" */
+        position: relative;
+      }
+
+      /* Make the selection page fill the remaining A4 height under the header */
+      .newsletter-preview[data-page-template="selection"] {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .selection-block {
+        flex: 1 1 0;
+        min-height: 0;
+        display: grid;
+        grid-template-columns: 4fr 6fr;
+        gap: 30px;
+        align-items: stretch;
+      }
+
+      .selection-block.reverse {
+        grid-template-columns: 6fr 4fr;
+      }
+
+      .selection-image {
+        width: 100%;
+        height: 100%;
+        min-height: 0;
+        border-radius: 6px;
+        overflow: hidden;
+        background: #e5e7eb;
+      }
+
+      .selection-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
+
+      .selection-text {
+        height: 100%;
+        min-height: 0;
+        display: grid;
+        grid-template-rows: auto 1fr;
+        align-content: start;
+        gap: 8px;
+      }
+
+      /* On selection blocks, keep the title from consuming vertical space that should belong to the content box */
+      .selection-text .alternating-title {
+        margin: 0;
+      }
+
+      .selection-content-box {
+        height: 100%;
+        max-height: 100%;
+        min-height: 0;
+        border: none;
+        border-radius: 4px;
+        padding: 0;
+        background: transparent;
+        font-size: 15px;
+        line-height: 20px;
+        color: rgb(7, 10, 14);
+        font-weight: 400;
+        font-family: 'Poppins', sans-serif;
+        overflow: visible;
+        outline: none;
+        box-sizing: border-box;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+
+      .selection-divider {
+        height: 3px;
+        background: rgb(48, 94, 159);
+        margin: 0;
+        border-radius: 2px;
+        width: 100%;
+        flex: 0 0 3px;
+      }
+
+      .selection-add-btn {
+        width: 44px;
+        height: 44px;
+        background: #10b981;
+        border: none;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        color: white;
+        font-size: 28px;
+        font-weight: 800;
+        position: absolute;
+        left: 0;
+        bottom: 12px;
+        margin: 0;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+      }
+
+      .selection-add-btn:hover {
+        background: #059669;
+        transform: translateY(-1px);
       }
     </style>
 </head>
@@ -1103,10 +1350,18 @@
         </div>
 
         <div class="add-page-section">
-            <button class="btn-add-page" onclick="addNewPage()">
-                <span>➕</span>
-                <span>Add Page</span>
-            </button>
+            <div class="add-page-controls">
+                <select class="page-type-select" id="pageTypeSelect" aria-label="Select page type">
+                    <option value="overview">Overview page</option>
+                    <option value="gallery">Gallery page</option>
+                    <option value="content" selected>Content page</option>
+                    <option value="selection">Selection-based page</option>
+                </select>
+                <button class="btn-add-page" onclick="addNewPage()">
+                    <span>➕</span>
+                    <span>Add Page</span>
+                </button>
+            </div>
         </div>
     </div>
 
@@ -2704,8 +2959,9 @@
             // Set pageCounter to max + 1 to ensure no conflicts
             pageCounter = Math.max(pageCounter, maxPageId) + 1;
             
-            const isEvenPage = pageCounter % 2 === 0;
-            const pageType = isEvenPage ? 'gallery' : 'content';
+            const pageTypeSelect = document.getElementById('pageTypeSelect');
+            const selectedType = pageTypeSelect ? pageTypeSelect.value : 'content';
+            const pageType = (selectedType === 'gallery') ? 'gallery' : 'content';
             
             const pagesContainer = document.getElementById('pagesContainer');
             if (!pagesContainer) {
@@ -2721,13 +2977,17 @@
             pageWrapper.setAttribute('data-unique-id', uniqueId);
 
             let pageContent = '';
-            
-            if (isEvenPage) {
-                // Gallery page
-                pageContent = createGalleryPage();
-            } else {
-                // For odd pages, use exact page 1 layout
+
+            if (selectedType === 'overview') {
                 pageContent = createPage1ExactLayout();
+            } else if (selectedType === 'gallery') {
+                pageContent = createGalleryPage();
+            } else if (selectedType === 'selection') {
+                pageContent = createSelectionBasedPage();
+            } else {
+                // Content page
+                const layoutType = layouts[Math.floor(Math.random() * layouts.length)];
+                pageContent = createContentPage(layoutType);
             }
 
             pageWrapper.innerHTML = `
@@ -2747,7 +3007,7 @@
             updatePageNumbers();
             
             // Update gallery page height if it's a gallery page
-            if (isEvenPage) {
+            if (pageType === 'gallery') {
                 setTimeout(() => {
                     const pagePreview = pageWrapper.querySelector('.newsletter-preview[data-page-type="gallery"]');
                     if (pagePreview) {
@@ -2760,6 +3020,75 @@
             setTimeout(() => {
                 pageWrapper.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             }, 200);
+        }
+
+        // "Selection-based" page: alternating blocks (image-left/text-right, divider, image-right/text-left, divider)
+        function createSelectionBasedPage() {
+            return `
+                <div class="newsletter-preview" data-page-type="content" data-page-template="selection" data-disable-quote="true">
+                    <div class="decorative-line-vertical"></div>
+                    <div class="newsletter-header">
+                        <div class="newsletter-title-wrapper">
+                            <h2 class="newsletter-title-sub editable" contenteditable="true" data-placeholder="COMPANY">COMPANY</h2>
+                            <div class="decorative-line-horizontal-title"></div>
+                        </div>
+                    </div>
+
+                    <div class="selection-page" data-next-selection-layout="reverse">
+                        <div class="selection-block">
+                            <div class="selection-image editable-image" onclick="changeImage(this, 'main')">
+                                <input type="file" accept="image/*" class="image-upload-input" onchange="handleImageUpload(event, this.parentElement)">
+                                <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: #e5e7eb; color: #666; font-size: 12px;">Click to add image</div>
+                            </div>
+                            <div class="selection-text">
+                                <h2 class="alternating-title editable" contenteditable="true" data-placeholder="TITLE">TITLE</h2>
+                                <div class="selection-content-box editable" contenteditable="true" data-placeholder="Enter content...">Enter content...</div>
+                            </div>
+                        </div>
+                        <button class="selection-add-btn" type="button" onclick="window.addSelectionBlock(this)" title="Add section">+</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Create alternating image + text page (image-left then image-right)
+        function createAlternatingImageTextPage() {
+            return `
+                <div class="newsletter-preview" data-page-type="content" data-disable-quote="true">
+                    <div class="decorative-line-vertical"></div>
+
+                    <div class="newsletter-header">
+                        <div class="newsletter-title-wrapper">
+                            <h2 class="newsletter-title-sub editable" contenteditable="true" data-placeholder="COMPANY">COMPANY</h2>
+                            <div class="decorative-line-horizontal-title"></div>
+                        </div>
+                    </div>
+
+                    <div class="alternating-page">
+                        <div class="alternating-block">
+                            <div class="alternating-image editable-image" onclick="changeImage(this, 'main')">
+                                <input type="file" accept="image/*" class="image-upload-input" onchange="handleImageUpload(event, this.parentElement)">
+                                <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: #e5e7eb; color: #666;">Click to add image</div>
+                            </div>
+                            <div class="alternating-text">
+                                <h2 class="alternating-title editable" contenteditable="true" data-placeholder="TITLE">TITLE</h2>
+                                <p class="alternating-content editable" contenteditable="true" data-placeholder="Enter content...">Enter content...</p>
+                            </div>
+                        </div>
+
+                        <div class="alternating-block reverse">
+                            <div class="alternating-text">
+                                <h2 class="alternating-title editable" contenteditable="true" data-placeholder="TITLE">TITLE</h2>
+                                <p class="alternating-content editable" contenteditable="true" data-placeholder="Enter content...">Enter content...</p>
+                            </div>
+                            <div class="alternating-image editable-image" onclick="changeImage(this, 'main')">
+                                <input type="file" accept="image/*" class="image-upload-input" onchange="handleImageUpload(event, this.parentElement)">
+                                <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: #e5e7eb; color: #666;">Click to add image</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
         }
 
         // Create gallery page
@@ -2848,6 +3177,72 @@
                     updateGalleryPageHeight(pagePreview);
                 }
             }, 10);
+        };
+
+        // Add a new alternating block to "selection-based" pages
+        window.addSelectionBlock = function(button) {
+            try {
+                const selectionPage = button.closest('.selection-page');
+                if (!selectionPage) return;
+
+                const maxBlocks = 4; // A4 max for selection-based pages
+                const currentBlocks = selectionPage.querySelectorAll('.selection-block').length;
+                if (currentBlocks >= maxBlocks) {
+                    button.style.display = 'none';
+                    alert(`Maximum ${maxBlocks} sections per page (A4)`);
+                    return;
+                }
+
+                const nextLayout = selectionPage.getAttribute('data-next-selection-layout') || 'reverse';
+                const isReverse = nextLayout === 'reverse';
+
+                const divider = document.createElement('div');
+                divider.className = 'selection-divider';
+
+                const block = document.createElement('div');
+                block.className = `selection-block${isReverse ? ' reverse' : ''}`;
+
+                if (isReverse) {
+                    block.innerHTML = `
+                        <div class="selection-text">
+                            <h2 class="alternating-title editable" contenteditable="true" data-placeholder="TITLE">TITLE</h2>
+                            <div class="selection-content-box editable" contenteditable="true" data-placeholder="Enter content...">Enter content...</div>
+                        </div>
+                        <div class="selection-image editable-image" onclick="changeImage(this, 'main')">
+                            <input type="file" accept="image/*" class="image-upload-input" onchange="handleImageUpload(event, this.parentElement)">
+                            <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: #e5e7eb; color: #666; font-size: 12px;">Click to add image</div>
+                        </div>
+                    `;
+                    selectionPage.setAttribute('data-next-selection-layout', 'normal');
+                } else {
+                    block.innerHTML = `
+                        <div class="selection-image editable-image" onclick="changeImage(this, 'main')">
+                            <input type="file" accept="image/*" class="image-upload-input" onchange="handleImageUpload(event, this.parentElement)">
+                            <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: #e5e7eb; color: #666; font-size: 12px;">Click to add image</div>
+                        </div>
+                        <div class="selection-text">
+                            <h2 class="alternating-title editable" contenteditable="true" data-placeholder="TITLE">TITLE</h2>
+                            <div class="selection-content-box editable" contenteditable="true" data-placeholder="Enter content...">Enter content...</div>
+                        </div>
+                    `;
+                    selectionPage.setAttribute('data-next-selection-layout', 'reverse');
+                }
+
+                // Insert divider + block ABOVE the "+" button
+                selectionPage.insertBefore(divider, button);
+                selectionPage.insertBefore(block, button);
+
+                // Ensure placeholders/handlers are applied to new editable nodes
+                initializeEditableElements();
+
+                // Hide "+" once we reach the max
+                const newCount = selectionPage.querySelectorAll('.selection-block').length;
+                if (newCount >= maxBlocks) {
+                    button.style.display = 'none';
+                }
+            } catch (e) {
+                console.error('Failed to add selection block:', e);
+            }
         };
 
 
@@ -3031,10 +3426,6 @@
                     <div class="decorative-line-vertical"></div>
                     
                     <div class="newsletter-header">
-                        <div class="newsletter-logo editable-image" onclick="changeImage(this, 'logo')">
-                            <input type="file" accept="image/*" class="image-upload-input" onchange="handleImageUpload(event, this.parentElement)">
-                            <img src="assets/images/TAAOWA-logo-new-transperent-bg.png" alt="Logo" />
-                        </div>
                         <div class="newsletter-title-wrapper">
                             <h2 class="newsletter-title-sub editable" contenteditable="true" data-placeholder="COMPANY">COMPANY</h2>
                             <div class="decorative-line-horizontal-title"></div>
@@ -3124,6 +3515,7 @@
                             <input type="file" accept="image/*" class="image-upload-input">
                             <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: #e5e7eb; color: #666;">Click to add image</div>
                         </div>
+                        <div class="two-column-below-image-input section-content editable" contenteditable="true" data-placeholder="Enter content...">Enter content...</div>
                     </div>
                     <div class="newsletter-right-column">
                         <div style="margin-top: 20px;">
@@ -3141,9 +3533,12 @@
                 `).join('');
             } else if (layoutType === 'image-left') {
                 layoutHTML = `
-                    <div class="newsletter-image-main editable-image" onclick="changeImage(this, 'main')" style="width: 100%; height: 300px;">
-                        <input type="file" accept="image/*" class="image-upload-input">
-                        <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: #e5e7eb; color: #666;">Click to add image</div>
+                    <div class="image-left-media-stack">
+                        <div class="newsletter-image-main editable-image" onclick="changeImage(this, 'main')" style="width: 100%; height: 300px;">
+                            <input type="file" accept="image/*" class="image-upload-input">
+                            <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: #e5e7eb; color: #666;">Click to add image</div>
+                        </div>
+                        <div class="image-left-below-input section-content editable" contenteditable="true" data-placeholder="Enter content...">Enter content...</div>
                     </div>
                     <div>
                         <h2 class="section-title editable" contenteditable="true" data-placeholder="${randomSections[0].title}">${randomSections[0].title}</h2>
@@ -3164,14 +3559,10 @@
             }
 
             return `
-                <div class="newsletter-preview" data-page-type="content">
+                <div class="newsletter-preview" data-page-type="content" data-page-template="content">
                     <div class="decorative-line-vertical"></div>
                     
                     <div class="newsletter-header">
-                        <div class="newsletter-logo editable-image" onclick="changeImage(this, 'logo')">
-                            <input type="file" accept="image/*" class="image-upload-input" onchange="handleImageUpload(event, this.parentElement)">
-                            <img src="assets/images/TAAOWA-logo-new-transperent-bg.png" alt="Logo" />
-                        </div>
                         <div class="newsletter-title-wrapper">
                             <h2 class="newsletter-title-sub editable" contenteditable="true" data-placeholder="COMPANY">COMPANY</h2>
                             <div class="decorative-line-horizontal-title"></div>
@@ -3195,6 +3586,7 @@
             const ensureQuoteElements = (pageWrapper) => {
                 const preview = pageWrapper.querySelector('.newsletter-preview[data-page-type="content"]');
                 if (!preview) return;
+                if (preview.getAttribute('data-disable-quote') === 'true') return;
 
                 let quote = preview.querySelector('.quote-text');
                 if (!quote) {
@@ -3526,109 +3918,169 @@
                 }
             });
 
-            // Prevent default behavior for contenteditable (except business-news-header which has its own handler)
+            // Normalize ALL "input boxes" so:
+            // - Enter inserts <br> (no <div>/<p> wrappers)
+            // - Paste preserves inline formatting (bold/italic/links) while converting block tags to <br>
+            // - Any accidental <div>/<p> wrappers are flattened to <br> without breaking cursor position
+            const getCaretOffset = (root) => {
+                const sel = window.getSelection();
+                if (!sel || sel.rangeCount === 0) return 0;
+                const range = sel.getRangeAt(0);
+                const pre = range.cloneRange();
+                pre.selectNodeContents(root);
+                pre.setEnd(range.endContainer, range.endOffset);
+                return pre.toString().length;
+            };
+
+            const setCaretOffset = (root, offset) => {
+                try {
+                    const sel = window.getSelection();
+                    if (!sel) return;
+                    const range = document.createRange();
+                    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null, false);
+                    let current = 0;
+                    let node;
+                    while ((node = walker.nextNode())) {
+                        const len = node.textContent.length;
+                        if (current + len >= offset) {
+                            range.setStart(node, Math.min(offset - current, len));
+                            range.collapse(true);
+                            sel.removeAllRanges();
+                            sel.addRange(range);
+                            return;
+                        }
+                        current += len;
+                    }
+                    // Fallback: end
+                    range.selectNodeContents(root);
+                    range.collapse(false);
+                    sel.removeAllRanges();
+                    sel.addRange(range);
+                } catch (e) {
+                    // ignore
+                }
+            };
+
+            const stripDangerousTags = (html) => {
+                return html
+                    .replace(/<\s*script[^>]*>[\s\S]*?<\s*\/\s*script\s*>/gi, '')
+                    .replace(/<\s*style[^>]*>[\s\S]*?<\s*\/\s*style\s*>/gi, '')
+                    .replace(/<\s*meta[^>]*>/gi, '')
+                    .replace(/<\s*link[^>]*>/gi, '');
+            };
+
+            const flattenBlockTagsToBr = (html) => {
+                let out = html;
+                // Convert common block tags into <br> boundaries while preserving inline formatting
+                out = out.replace(/<\/(div|p|section|article|header|footer|blockquote|h[1-6])>/gi, '<br>');
+                out = out.replace(/<(div|p|section|article|header|footer|blockquote|h[1-6])[^>]*>/gi, '');
+                // Collapse multiple <br>
+                out = out.replace(/(<br\s*\/?>\s*){2,}/gi, '<br>');
+                // Trim leading/trailing <br>
+                out = out.replace(/^(<br\s*\/?>\s*)+/i, '').replace(/(<br\s*\/?>\s*)+$/i, '');
+                return out;
+            };
+
+            const normalizeEditable = (el) => {
+                const hasBlocks = el.querySelector('div, p');
+                if (!hasBlocks) return;
+                const caret = getCaretOffset(el);
+                const cleaned = flattenBlockTagsToBr(stripDangerousTags(el.innerHTML));
+                el.innerHTML = cleaned;
+                setCaretOffset(el, caret);
+            };
+
+            const insertBrAtCursor = (rootEl) => {
+                const sel = window.getSelection();
+                if (!sel || sel.rangeCount === 0) return;
+                const range = sel.getRangeAt(0);
+
+                // Only handle if caret is inside this editable element
+                if (!rootEl.contains(range.startContainer)) return;
+
+                range.deleteContents();
+
+                const br = document.createElement('br');
+                range.insertNode(br);
+
+                // Move caret after the <br>. If <br> is the last node, add a text node so caret can sit after it.
+                const parent = br.parentNode;
+                const next = br.nextSibling;
+                let caretNode = next;
+                if (!caretNode) {
+                    caretNode = document.createTextNode('');
+                    parent.appendChild(caretNode);
+                }
+
+                const newRange = document.createRange();
+                newRange.setStart(caretNode, 0);
+                newRange.collapse(true);
+                sel.removeAllRanges();
+                sel.addRange(newRange);
+            };
+
             document.querySelectorAll('[contenteditable="true"]:not(.business-news-header)').forEach(element => {
-                if (!element.hasAttribute('data-paste-handler')) {
-                    element.setAttribute('data-paste-handler', 'true');
-                element.addEventListener('paste', function(e) {
-                    e.preventDefault();
-                    const text = (e.clipboardData || window.clipboardData).getData('text');
-                    document.execCommand('insertText', false, text);
-                    
-                    // Clean up div wrappers after paste (for paragraph elements)
-                    if (this.classList.contains('partnership-content') || 
-                        this.classList.contains('section-content') || 
-                        this.classList.contains('business-news-content')) {
-                        setTimeout(() => {
-                            const divs = this.querySelectorAll('div');
-                            divs.forEach(div => {
-                                const parent = div.parentNode;
-                                while (div.firstChild) {
-                                    parent.insertBefore(div.firstChild, div);
-                                }
-                                div.remove();
-                            });
-                            const emptyPs = this.querySelectorAll('p');
-                            emptyPs.forEach(p => {
-                                if (!p.textContent.trim() && !p.querySelector('br, img, strong, em, span, a')) {
-                                    p.remove();
-                                }
-                            });
-                        }, 0);
+                // Do not interfere with list item editing behavior
+                if (element.tagName === 'LI') return;
+                if (element.hasAttribute('data-editor-handlers')) return;
+                element.setAttribute('data-editor-handlers', 'true');
+
+                element.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        // Insert a simple line break (avoids <div>/<p> wrappers)
+                        insertBrAtCursor(this);
                     }
                 });
-                }
-                
-                // Add input and blur handlers to clean up div wrappers in paragraph elements
-                if (element.classList.contains('partnership-content') || 
-                    element.classList.contains('section-content') || 
-                    element.classList.contains('business-news-content')) {
-                    if (!element.hasAttribute('data-cleanup-handler')) {
-                        element.setAttribute('data-cleanup-handler', 'true');
-                        
-                        // Function to clean up div wrappers and empty p tags
-                        const cleanupDivs = (targetElement) => {
-                            const divs = targetElement.querySelectorAll('div');
-                            if (divs.length > 0) {
-                                divs.forEach(div => {
-                                    // Unwrap the div - move all its children to its parent, then remove the div
-                                    const parent = div.parentNode;
-                                    while (div.firstChild) {
-                                        parent.insertBefore(div.firstChild, div);
-                                    }
-                                    div.remove();
-                                });
-                            }
-                            
-                            // Remove empty p tags
-                            const emptyPs = targetElement.querySelectorAll('p');
-                            emptyPs.forEach(p => {
-                                if (!p.textContent.trim() && !p.querySelector('br, img, strong, em, span, a')) {
-                                    p.remove();
-                                }
-                            });
-                        };
-                        
-                        // Clean up on input (real-time)
-                        element.addEventListener('input', function() {
-                            // Use setTimeout to avoid interfering with the current input
-                            setTimeout(() => {
-                                cleanupDivs(this);
-                            }, 0);
-                        });
-                        
-                        // Clean up on blur (when user finishes editing)
-                        element.addEventListener('blur', function() {
-                            cleanupDivs(this);
-                        });
-                        
-                        // Use MutationObserver to catch div additions in real-time
-                        const observer = new MutationObserver(function(mutations) {
-                            let shouldCleanup = false;
-                            mutations.forEach(function(mutation) {
-                                mutation.addedNodes.forEach(function(node) {
-                                    if (node.nodeType === Node.ELEMENT_NODE) {
-                                        if (node.tagName === 'DIV' || node.querySelector && node.querySelector('div')) {
-                                            shouldCleanup = true;
-                                        }
-                                    }
-                                });
-                            });
-                            
-                            if (shouldCleanup) {
-                                setTimeout(() => {
-                                    cleanupDivs(element);
-                                }, 0);
-                            }
-                        });
-                        
-                        // Observe changes to the element
-                        observer.observe(element, {
-                            childList: true,
-                            subtree: true
-                        });
+
+                element.addEventListener('paste', function(e) {
+                    e.preventDefault();
+                    const clipboardData = e.clipboardData || window.clipboardData;
+                    const html = clipboardData ? clipboardData.getData('text/html') : '';
+                    const text = clipboardData ? clipboardData.getData('text') : '';
+
+                    if (html) {
+                        const cleanHTML = flattenBlockTagsToBr(stripDangerousTags(html));
+                        document.execCommand('insertHTML', false, cleanHTML);
+                    } else {
+                        // Preserve newlines as <br>
+                        const escaped = (text || '')
+                            .replace(/&/g, '&amp;')
+                            .replace(/</g, '&lt;')
+                            .replace(/>/g, '&gt;')
+                            .replace(/\n/g, '<br>');
+                        document.execCommand('insertHTML', false, escaped);
                     }
-                }
+
+                    // Normalize any wrappers that slipped in
+                    setTimeout(() => {
+                        normalizeEditable(this);
+                    }, 0);
+                });
+
+                element.addEventListener('input', function() {
+                    // Only normalize when block wrappers appear (keeps typing/cursor stable)
+                    normalizeEditable(this);
+                });
+
+                // Catch wrappers that browsers inject (e.g., on Enter or some pastes)
+                const observer = new MutationObserver(() => {
+                    normalizeEditable(element);
+                });
+                observer.observe(element, { childList: true, subtree: true });
+            });
+
+            // Re-bind section-based "+" buttons after loading pages from Drive (saved HTML has onclick stripped)
+            document.querySelectorAll('.selection-add-btn').forEach(btn => {
+                if (btn.hasAttribute('data-bound')) return;
+                btn.setAttribute('data-bound', 'true');
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (typeof window.addSelectionBlock === 'function') {
+                        window.addSelectionBlock(this);
+                    }
+                });
             });
         }
 
