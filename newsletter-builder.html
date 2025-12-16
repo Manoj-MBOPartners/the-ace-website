@@ -2496,32 +2496,20 @@
                 
                 console.log(`[Load] Page ${pageNum}: Ensured contenteditable attributes on all editable elements`);
                 
-                // Ensure editable-image elements are clickable
+                // Ensure file input elements exist for all editable-image elements
+                // This must be done BEFORE converting to HTML string
                 const editableImages = pageElement.querySelectorAll('.editable-image');
                 editableImages.forEach(img => {
-                    // Always re-attach click handler (inline onclick from HTML strings may not work)
-                    const isLogo = img.classList.contains('newsletter-logo');
-                    const isGallery = img.classList.contains('gallery-image-item');
-                    if (isLogo) {
-                        img.onclick = function(e) { changeImage(this, 'logo'); };
-                    } else if (isGallery) {
-                        img.onclick = function(e) {
-                            if (!e.target.closest('.gallery-btn-delete')) {
-                                changeImage(this, 'gallery');
-                            }
-                        };
-                    } else {
-                        img.onclick = function(e) { changeImage(this, 'image'); };
-                    }
-                    
-                    // Ensure file input elements have their onchange handlers properly attached
-                    const fileInput = img.querySelector('input[type="file"]');
-                    if (fileInput) {
-                        // Remove any existing inline onchange attribute and attach proper handler
-                        fileInput.removeAttribute('onchange');
-                        fileInput.onchange = function(e) {
-                            handleImageUpload(e, img, pageElement);
-                        };
+                    // Ensure file input exists - create if missing
+                    let fileInput = img.querySelector('input[type="file"]');
+                    if (!fileInput) {
+                        fileInput = document.createElement('input');
+                        fileInput.type = 'file';
+                        fileInput.accept = 'image/*';
+                        fileInput.className = 'image-upload-input';
+                        fileInput.style.display = 'none';
+                        img.appendChild(fileInput);
+                        console.log(`[Load] Page ${pageNum}: Created missing file input for editable-image`);
                     }
                 });
                 
@@ -2563,8 +2551,7 @@
                 document.getElementById('pagesContainer').appendChild(pageWrapper);
                 pageCounter = Math.max(pageCounter, parseInt(pageNum));
                 
-                // Initialize editable elements for this newly loaded page
-                // Target only elements within this page wrapper to avoid conflicts
+                // Initialize editable elements and image handlers AFTER page is in DOM
                 setTimeout(() => {
                     // Remove data-initialized flags from this page's elements so they get initialized
                     const pageEditableElements = pageWrapper.querySelectorAll('[contenteditable="true"]');
@@ -2573,6 +2560,50 @@
                     });
                     // Now initialize
                     initializeEditableElements();
+                    
+                    // Re-attach image click handlers to the actual DOM elements (not the temporary ones)
+                    const domEditableImages = pageWrapper.querySelectorAll('.editable-image');
+                    domEditableImages.forEach(img => {
+                        // Determine image type
+                        const isLogo = img.classList.contains('newsletter-logo');
+                        const isGallery = img.classList.contains('gallery-image-item');
+                        
+                        // Attach click handler
+                        img.onclick = function(e) {
+                            e.stopPropagation();
+                            if (isLogo) {
+                                changeImage(this, 'logo');
+                            } else if (isGallery) {
+                                if (!e.target.closest('.gallery-btn-delete')) {
+                                    changeImage(this, 'gallery');
+                                }
+                            } else {
+                                changeImage(this, 'image');
+                            }
+                        };
+                        
+                        // Ensure file input exists and has proper handler
+                        let fileInput = img.querySelector('input[type="file"]');
+                        if (!fileInput) {
+                            fileInput = document.createElement('input');
+                            fileInput.type = 'file';
+                            fileInput.accept = 'image/*';
+                            fileInput.className = 'image-upload-input';
+                            fileInput.style.display = 'none';
+                            img.appendChild(fileInput);
+                        }
+                        
+                        // Attach change handler to file input
+                        fileInput.onchange = function(e) {
+                            const pagePreview = img.closest('.newsletter-preview');
+                            handleImageUpload(e, img, pagePreview);
+                        };
+                        
+                        // Ensure cursor pointer style
+                        img.style.cursor = 'pointer';
+                        
+                        console.log(`[Load] Page ${pageNum}: Attached handlers to editable-image (type: ${isLogo ? 'logo' : isGallery ? 'gallery' : 'image'})`);
+                    });
                 }, 100);
                 
                 // Verify only one page with this page number exists
@@ -2780,17 +2811,34 @@
 
         // Handle image uploads
         function changeImage(element, type) {
-            const pageElement = element.closest('.newsletter-preview');
-            const input = element.querySelector('input[type="file"]');
-            if (input) {
-                input.click();
-            } else {
-                const fileInput = document.createElement('input');
-                fileInput.type = 'file';
-                fileInput.accept = 'image/*';
-                fileInput.onchange = (e) => handleImageUpload(e, element, pageElement);
-                fileInput.click();
+            if (!element) {
+                console.error('changeImage called with null element');
+                return;
             }
+            
+            const pageElement = element.closest('.newsletter-preview');
+            let input = element.querySelector('input[type="file"]');
+            
+            // If input doesn't exist, create and attach it
+            if (!input) {
+                console.log('Creating file input for editable-image');
+                input = document.createElement('input');
+                input.type = 'file';
+                input.accept = 'image/*';
+                input.className = 'image-upload-input';
+                input.style.display = 'none';
+                element.appendChild(input);
+            }
+            
+            // Ensure handler is attached (in case it was lost)
+            if (!input.onchange) {
+                input.onchange = (e) => {
+                    handleImageUpload(e, element, pageElement);
+                };
+            }
+            
+            // Trigger file picker
+            input.click();
         }
 
         async function handleImageUpload(event, element, pageElement) {
