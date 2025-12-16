@@ -1656,50 +1656,75 @@
             await aggressiveCleanup();
         }
         
-        // Download image from Google Drive and store in localStorage
-        async function downloadAndStoreImage(fileId) {
+        // Download image from Google Drive and store in localStorage (with rate limit handling)
+        async function downloadAndStoreImage(fileId, retries = 3) {
             try {
                 // Check if already in localStorage
-                const cachedImage = getImageFromLocalStorage(fileId);
+                const cachedImage = await getImageFromLocalStorage(fileId);
                 if (cachedImage) {
-                    console.log(`Image ${fileId} found in localStorage cache`);
+                    console.log(`Image ${fileId} found in cache`);
                     return cachedImage;
                 }
                 
-                // Download from Google Drive
-                console.log(`Downloading image ${fileId} from Google Drive...`);
-                const response = await fetch(GOOGLE_SCRIPT_URL, {
-                    method: 'POST',
-                    mode: 'cors',
-                    cache: 'no-store',
-                    headers: {
-                        'Content-Type': 'text/plain;charset=utf-8',
-                    },
-                    body: JSON.stringify({
-                        action: 'download',
-                        id: fileId
-                    })
-                });
-                
-                if (!response.ok) {
-                    throw new Error(`Download failed: ${response.statusText}`);
+                // Download from Google Drive with retry logic
+                for (let attempt = 0; attempt < retries; attempt++) {
+                    try {
+                        console.log(`Downloading image ${fileId} from Google Drive... (attempt ${attempt + 1}/${retries})`);
+                        const response = await fetch(GOOGLE_SCRIPT_URL, {
+                            method: 'POST',
+                            mode: 'cors',
+                            cache: 'no-store',
+                            headers: {
+                                'Content-Type': 'text/plain;charset=utf-8',
+                            },
+                            body: JSON.stringify({
+                                action: 'download',
+                                id: fileId
+                            })
+                        });
+                        
+                        if (!response.ok) {
+                            // Check for rate limit errors
+                            if (response.status === 429 || response.status === 403) {
+                                if (attempt < retries - 1) {
+                                    const waitTime = Math.pow(2, attempt) * 1000; // Exponential backoff
+                                    console.warn(`Rate limit hit for image ${fileId}, retrying in ${waitTime}ms...`);
+                                    await new Promise(resolve => setTimeout(resolve, waitTime));
+                                    continue;
+                                }
+                            }
+                            throw new Error(`Download failed: ${response.status} ${response.statusText}`);
+                        }
+                        
+                        // Get the blob
+                        const blob = await response.blob();
+                        
+                        // Convert to data URL
+                        const dataUrl = await new Promise((resolve, reject) => {
+                            const reader = new FileReader();
+                            reader.onload = () => resolve(reader.result);
+                            reader.onerror = reject;
+                            reader.readAsDataURL(blob);
+                        });
+                        
+                        // Store in IndexedDB/localStorage
+                        await storeImageInLocalStorage(fileId, dataUrl);
+                        
+                        return dataUrl;
+                    } catch (error) {
+                        if (attempt === retries - 1) {
+                            throw error; // Last attempt, throw the error
+                        }
+                        // Check if it's a rate limit error
+                        if (error.message && (error.message.includes('429') || error.message.includes('403'))) {
+                            const waitTime = Math.pow(2, attempt) * 1000;
+                            console.warn(`Rate limit error for image ${fileId}, retrying in ${waitTime}ms...`);
+                            await new Promise(resolve => setTimeout(resolve, waitTime));
+                            continue;
+                        }
+                        throw error; // Re-throw if not rate limit
+                    }
                 }
-                
-                // Get the blob
-                const blob = await response.blob();
-                
-                // Convert to data URL
-                const dataUrl = await new Promise((resolve, reject) => {
-                    const reader = new FileReader();
-                    reader.onload = () => resolve(reader.result);
-                    reader.onerror = reject;
-                    reader.readAsDataURL(blob);
-                });
-                
-                // Store in IndexedDB/localStorage
-                await storeImageInLocalStorage(fileId, dataUrl);
-                
-                return dataUrl;
             } catch (error) {
                 console.error(`Error downloading image ${fileId}:`, error);
                 return null;
@@ -2360,25 +2385,62 @@
                 // Update loading text
                 loadingOverlay.querySelector('.loading-text').textContent = `Loading ${latestPageFiles.length} pages...`;
                 
-                // Load only the latest version of each page from Google Drive
+                // Load pages with rate limit awareness (max 2 concurrent to respect GDrive limits)
                 const loadedPageNumbers = new Set(); // Track which page numbers we've loaded
-                for (let i = 0; i < latestPageFiles.length; i++) {
-                    const file = latestPageFiles[i];
-                    const match = file.name.match(/newsletter-page-(\d+)-/);
-                    if (match) {
-                        const pageNum = parseInt(match[1]);
-                        
-                        // Double-check: don't load if we've already loaded this page number
-                        if (loadedPageNumbers.has(pageNum)) {
-                            console.warn(`Skipping duplicate page number ${pageNum} for file ${file.name}`);
-                            continue;
+                let loadedCount = 0;
+                
+                // Helper to load with retry on rate limit errors
+                async function loadWithRetry(pageNum, fileId, retries = 3) {
+                    for (let attempt = 0; attempt < retries; attempt++) {
+                        try {
+                            await loadPageFromGoogleDrive(pageNum, fileId);
+                            loadedCount++;
+                            loadingOverlay.querySelector('.loading-text').textContent = `Loaded ${loadedCount} of ${latestPageFiles.length} pages...`;
+                            return;
+                        } catch (error) {
+                            // Check if it's a rate limit error (429 or 403)
+                            if ((error.message && error.message.includes('429')) || 
+                                (error.message && error.message.includes('rate limit')) ||
+                                (error.message && error.message.includes('403'))) {
+                                if (attempt < retries - 1) {
+                                    // Exponential backoff: wait longer on each retry
+                                    const waitTime = Math.pow(2, attempt) * 1000; // 1s, 2s, 4s
+                                    console.warn(`Rate limit hit for page ${pageNum}, retrying in ${waitTime}ms...`);
+                                    await new Promise(resolve => setTimeout(resolve, waitTime));
+                                    continue;
+                                }
+                            }
+                            throw error; // Re-throw if not rate limit or out of retries
                         }
-                        
-                        loadedPageNumbers.add(pageNum);
-                        loadingOverlay.querySelector('.loading-text').textContent = `Loading page ${i + 1} of ${latestPageFiles.length}...`;
-                        await loadPageFromGoogleDrive(pageNum, file.id);
-                        // Small delay between requests
-                        await new Promise(resolve => setTimeout(resolve, 100));
+                    }
+                }
+                
+                // Process in batches of 2 to respect Google Drive rate limits
+                for (let i = 0; i < latestPageFiles.length; i += 2) {
+                    const batch = latestPageFiles.slice(i, i + 2);
+                    const batchPromises = [];
+                    
+                    for (const file of batch) {
+                        const match = file.name.match(/newsletter-page-(\d+)-/);
+                        if (match) {
+                            const pageNum = parseInt(match[1]);
+                            
+                            if (loadedPageNumbers.has(pageNum)) {
+                                console.warn(`Skipping duplicate page number ${pageNum} for file ${file.name}`);
+                                continue;
+                            }
+                            
+                            loadedPageNumbers.add(pageNum);
+                            batchPromises.push(loadWithRetry(pageNum, file.id));
+                        }
+                    }
+                    
+                    // Wait for this batch to complete before starting next (respects rate limits)
+                    await Promise.all(batchPromises);
+                    
+                    // Small delay between batches to avoid hitting rate limits
+                    if (i + 2 < latestPageFiles.length) {
+                        await new Promise(resolve => setTimeout(resolve, 200));
                     }
                 }
                 
@@ -2434,13 +2496,14 @@
             }
         }
         
-        // Process images in a loaded page - download and store in localStorage
+        // Process images in a loaded page - download and store in localStorage (with rate limit awareness)
         async function processPageImages(pageElement) {
             if (!pageElement) return;
             
             const images = pageElement.querySelectorAll('img');
-            const imagePromises = [];
+            const imagesToProcess = [];
             
+            // Collect all images that need processing
             images.forEach(img => {
                 const src = img.getAttribute('src');
                 if (!src) return;
@@ -2452,60 +2515,52 @@
                 if (src.startsWith('assets/') || src.startsWith('./assets/')) return;
                 
                 // Try to extract file ID from URL
-                const fileId = extractFileIdFromUrl(src);
+                let fileId = extractFileIdFromUrl(src);
+                
+                if (!fileId && src.includes(GOOGLE_SCRIPT_URL)) {
+                    fileId = extractFileIdFromUrl(src);
+                }
                 
                 if (fileId) {
-                    // Store file ID on image element for later reference when saving
                     img.setAttribute('data-file-id', fileId);
-                    
-                    // Check storage first (IndexedDB or localStorage)
-                    const promise = (async () => {
+                    imagesToProcess.push({ img, fileId });
+                }
+            });
+            
+            if (imagesToProcess.length === 0) return;
+            
+            // Process images in batches of 3 to respect rate limits
+            for (let i = 0; i < imagesToProcess.length; i += 3) {
+                const batch = imagesToProcess.slice(i, i + 3);
+                const batchPromises = batch.map(async ({ img, fileId }) => {
+                    try {
                         const cachedImage = await getImageFromLocalStorage(fileId);
                         if (cachedImage) {
                             img.src = cachedImage;
-                            // Keep the file ID attribute so we can reference it when saving
                             console.log(`Image ${fileId} loaded from cache`);
                         } else {
-                            // Download and store
+                            // Download and store (with retry logic built in)
                             const dataUrl = await downloadAndStoreImage(fileId);
                             if (dataUrl) {
                                 img.src = dataUrl;
-                                // Keep the file ID attribute
                                 console.log(`Image ${fileId} downloaded and stored`);
                             } else {
                                 console.warn(`Failed to download image ${fileId}, keeping original URL`);
                             }
                         }
-                    })();
-                    imagePromises.push(promise);
-                } else {
-                    // Not a Google Drive URL, might be a direct URL - try to download if it's from the script
-                    if (src.includes(GOOGLE_SCRIPT_URL)) {
-                        // Try to extract ID from the URL using the enhanced function
-                        const fileId = extractFileIdFromUrl(src);
-                        if (fileId) {
-                            // Store file ID on image element
-                            img.setAttribute('data-file-id', fileId);
-                            
-                            const promise = (async () => {
-                                const cachedImage = await getImageFromLocalStorage(fileId);
-                                if (cachedImage) {
-                                    img.src = cachedImage;
-                                } else {
-                                    const dataUrl = await downloadAndStoreImage(fileId);
-                                    if (dataUrl) {
-                                        img.src = dataUrl;
-                                    }
-                                }
-                            })();
-                            imagePromises.push(promise);
-                        }
+                    } catch (error) {
+                        console.error(`Error processing image ${fileId}:`, error);
                     }
+                });
+                
+                // Wait for batch to complete before starting next
+                await Promise.all(batchPromises);
+                
+                // Small delay between batches to avoid rate limits
+                if (i + 3 < imagesToProcess.length) {
+                    await new Promise(resolve => setTimeout(resolve, 300));
                 }
-            });
-            
-            // Wait for all images to be processed
-            await Promise.all(imagePromises);
+            }
         }
         
         // Load a single page from Google Drive using file ID
@@ -2551,8 +2606,12 @@
                 
                 if (!pageResponse.ok) {
                     const errorText = await pageResponse.text();
+                    // Check for rate limit errors
+                    if (pageResponse.status === 429 || pageResponse.status === 403) {
+                        throw new Error(`Rate limit error (${pageResponse.status}): ${errorText}`);
+                    }
                     console.error(`Failed to load page ${pageNum}:`, errorText);
-                    throw new Error(`Failed to load page ${pageNum}: ${pageResponse.statusText}`);
+                    throw new Error(`Failed to load page ${pageNum}: ${pageResponse.status} ${pageResponse.statusText}`);
                 }
                 
                 const pageHTML = await pageResponse.text();
@@ -2696,8 +2755,10 @@
                     }
                 }
                 
-                // Process images before adding to DOM (download and store in localStorage)
-                await processPageImages(pageElement);
+                // Process images in background (non-blocking) - page will show first, images load after
+                processPageImages(pageElement).catch(err => {
+                    console.error(`Error processing images for page ${pageNum}:`, err);
+                });
                 
                 // Final check: Make sure no duplicate exists before adding
                 const finalCheck = document.querySelector(`.page-wrapper[data-page-id="${pageNum}"][data-unique-id="${uniqueId}"]`);
