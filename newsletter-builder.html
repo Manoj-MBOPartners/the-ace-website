@@ -2506,50 +2506,81 @@
             // Collect all images that need processing
             images.forEach(img => {
                 const src = img.getAttribute('src');
-                if (!src) return;
+                if (!src) {
+                    console.warn('Image found with no src attribute');
+                    return;
+                }
                 
                 // Skip if already a data URL
-                if (src.startsWith('data:')) return;
+                if (src.startsWith('data:')) {
+                    console.log('Image already has data URL, skipping');
+                    return;
+                }
                 
                 // Skip if it's a local asset (starts with assets/)
-                if (src.startsWith('assets/') || src.startsWith('./assets/')) return;
+                if (src.startsWith('assets/') || src.startsWith('./assets/')) {
+                    console.log('Image is local asset, skipping');
+                    return;
+                }
                 
                 // Try to extract file ID from URL
                 let fileId = extractFileIdFromUrl(src);
                 
+                // If no fileId found but URL contains Google Script URL, try again
                 if (!fileId && src.includes(GOOGLE_SCRIPT_URL)) {
                     fileId = extractFileIdFromUrl(src);
                 }
                 
                 if (fileId) {
                     img.setAttribute('data-file-id', fileId);
-                    imagesToProcess.push({ img, fileId });
+                    imagesToProcess.push({ img, fileId, originalSrc: src });
+                    console.log(`Found image to process: fileId=${fileId}, src=${src.substring(0, 50)}...`);
+                } else {
+                    // If we can't extract fileId but it's a Google Drive URL, keep the original src
+                    console.warn(`Could not extract fileId from image src: ${src.substring(0, 100)}`);
+                    // Keep original src - it should work as-is
                 }
             });
             
-            if (imagesToProcess.length === 0) return;
+            if (imagesToProcess.length === 0) {
+                console.log('No images to process');
+                return;
+            }
+            
+            console.log(`Processing ${imagesToProcess.length} images...`);
             
             // Process images in batches of 3 to respect rate limits
             for (let i = 0; i < imagesToProcess.length; i += 3) {
                 const batch = imagesToProcess.slice(i, i + 3);
-                const batchPromises = batch.map(async ({ img, fileId }) => {
+                const batchPromises = batch.map(async ({ img, fileId, originalSrc }) => {
                     try {
+                        // Check cache first
                         const cachedImage = await getImageFromLocalStorage(fileId);
                         if (cachedImage) {
                             img.src = cachedImage;
                             console.log(`Image ${fileId} loaded from cache`);
+                            return;
+                        }
+                        
+                        // Download and store (with retry logic built in)
+                        console.log(`Downloading image ${fileId}...`);
+                        const dataUrl = await downloadAndStoreImage(fileId);
+                        if (dataUrl) {
+                            img.src = dataUrl;
+                            console.log(`Image ${fileId} downloaded and stored`);
                         } else {
-                            // Download and store (with retry logic built in)
-                            const dataUrl = await downloadAndStoreImage(fileId);
-                            if (dataUrl) {
-                                img.src = dataUrl;
-                                console.log(`Image ${fileId} downloaded and stored`);
-                            } else {
-                                console.warn(`Failed to download image ${fileId}, keeping original URL`);
+                            console.warn(`Failed to download image ${fileId}, keeping original URL: ${originalSrc}`);
+                            // Keep original src if download fails
+                            if (img.src !== originalSrc) {
+                                img.src = originalSrc;
                             }
                         }
                     } catch (error) {
                         console.error(`Error processing image ${fileId}:`, error);
+                        // On error, restore original src
+                        if (img.src !== originalSrc) {
+                            img.src = originalSrc;
+                        }
                     }
                 });
                 
@@ -2561,6 +2592,8 @@
                     await new Promise(resolve => setTimeout(resolve, 300));
                 }
             }
+            
+            console.log(`Finished processing ${imagesToProcess.length} images`);
         }
         
         // Load a single page from Google Drive using file ID
@@ -2755,11 +2788,6 @@
                     }
                 }
                 
-                // Process images in background (non-blocking) - page will show first, images load after
-                processPageImages(pageElement).catch(err => {
-                    console.error(`Error processing images for page ${pageNum}:`, err);
-                });
-                
                 // Final check: Make sure no duplicate exists before adding
                 const finalCheck = document.querySelector(`.page-wrapper[data-page-id="${pageNum}"][data-unique-id="${uniqueId}"]`);
                 if (finalCheck) {
@@ -2783,6 +2811,14 @@
                 `;
                 document.getElementById('pagesContainer').appendChild(pageWrapper);
                 pageCounter = Math.max(pageCounter, parseInt(pageNum));
+                
+                // Process images AFTER page is in DOM (so we can update the actual DOM elements)
+                const domPageElement = pageWrapper.querySelector('.newsletter-preview');
+                if (domPageElement) {
+                    processPageImages(domPageElement).catch(err => {
+                        console.error(`Error processing images for page ${pageNum}:`, err);
+                    });
+                }
                 
                 // Initialize editable elements and image handlers AFTER page is in DOM
                 setTimeout(() => {
