@@ -2499,21 +2499,29 @@
                 // Ensure editable-image elements are clickable
                 const editableImages = pageElement.querySelectorAll('.editable-image');
                 editableImages.forEach(img => {
-                    // Re-attach click handler if needed
-                    if (!img.onclick) {
-                        const isLogo = img.classList.contains('newsletter-logo');
-                        const isGallery = img.classList.contains('gallery-image-item');
-                        if (isLogo) {
-                            img.onclick = function(e) { changeImage(this, 'logo'); };
-                        } else if (isGallery) {
-                            img.onclick = function(e) {
-                                if (!e.target.closest('.gallery-btn-delete')) {
-                                    changeImage(this, 'gallery');
-                                }
-                            };
-                        } else {
-                            img.onclick = function(e) { changeImage(this, 'image'); };
-                        }
+                    // Always re-attach click handler (inline onclick from HTML strings may not work)
+                    const isLogo = img.classList.contains('newsletter-logo');
+                    const isGallery = img.classList.contains('gallery-image-item');
+                    if (isLogo) {
+                        img.onclick = function(e) { changeImage(this, 'logo'); };
+                    } else if (isGallery) {
+                        img.onclick = function(e) {
+                            if (!e.target.closest('.gallery-btn-delete')) {
+                                changeImage(this, 'gallery');
+                            }
+                        };
+                    } else {
+                        img.onclick = function(e) { changeImage(this, 'image'); };
+                    }
+                    
+                    // Ensure file input elements have their onchange handlers properly attached
+                    const fileInput = img.querySelector('input[type="file"]');
+                    if (fileInput) {
+                        // Remove any existing inline onchange attribute and attach proper handler
+                        fileInput.removeAttribute('onchange');
+                        fileInput.onchange = function(e) {
+                            handleImageUpload(e, img, pageElement);
+                        };
                     }
                 });
                 
