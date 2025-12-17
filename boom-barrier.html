@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Boom Barrier Status - The ACE</title>
+    <meta property="og:title" content="Boom Barrier Status - The ACE" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="utf-8" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&amp;display=swap"
+    />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      
+      body {
+        font-family: 'Poppins', sans-serif;
+        background-color: #f5f5f5;
+        color: #333;
+        line-height: 1.6;
+      }
+      
+      .header {
+        background-color: #ffffff;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        padding: 15px 0;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+      }
+      
+      .header-content {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      
+      .logo-container {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+      }
+      
+      .header-logo {
+        height: 50px;
+        width: auto;
+      }
+      
+      .header-title {
+        font-size: 20px;
+        font-weight: 600;
+        color: #000080;
+      }
+      
+      .back-button {
+        padding: 10px 20px;
+        background-color: #000080;
+        color: white;
+        text-decoration: none;
+        border-radius: 4px;
+        font-size: 14px;
+        font-weight: 500;
+        transition: background-color 0.3s ease;
+      }
+      
+      .back-button:hover {
+        background-color: #000060;
+      }
+      
+      .main-container {
+        max-width: 1000px;
+        margin: 30px auto;
+        padding: 0 20px;
+      }
+      
+      .page-title {
+        text-align: center;
+        color: #000080;
+        font-size: 32px;
+        font-weight: 700;
+        margin-bottom: 10px;
+      }
+      
+      .page-subtitle {
+        text-align: center;
+        color: #666;
+        font-size: 16px;
+        margin-bottom: 30px;
+      }
+      
+      .search-container {
+        background-color: #ffffff;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        padding: 30px;
+        margin-bottom: 20px;
+      }
+      
+      .search-header {
+        background-color: #000080;
+        color: white;
+        padding: 20px;
+        text-align: center;
+        border-radius: 8px 8px 0 0;
+        margin: -30px -30px 30px -30px;
+      }
+      
+      .search-header h2 {
+        font-size: 24px;
+        font-weight: 600;
+        margin-bottom: 5px;
+      }
+      
+      .form-group {
+        margin-bottom: 20px;
+      }
+      
+      .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 500;
+        color: #333;
+        font-size: 14px;
+      }
+      
+      .form-group input {
+        width: 100%;
+        padding: 12px 15px;
+        border: 2px solid #ddd;
+        border-radius: 4px;
+        font-size: 16px;
+        font-family: 'Poppins', sans-serif;
+        transition: border-color 0.3s ease;
+      }
+      
+      .form-group input:focus {
+        outline: none;
+        border-color: #000080;
+      }
+      
+      .search-button {
+        width: 100%;
+        padding: 15px;
+        background-color: #000080;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        font-size: 16px;
+        font-weight: 600;
+        font-family: 'Poppins', sans-serif;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+        margin-top: 10px;
+      }
+      
+      .search-button:hover {
+        background-color: #000060;
+      }
+      
+      .search-button:active {
+        transform: scale(0.98);
+      }
+      
+      .results-container {
+        background-color: #ffffff;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        padding: 30px;
+        margin-top: 20px;
+        display: none;
+      }
+      
+      .results-header {
+        background-color: #e8f4f8;
+        border-left: 4px solid #000080;
+        padding: 20px;
+        margin: -30px -30px 30px -30px;
+        border-radius: 8px 8px 0 0;
+      }
+      
+      .results-title {
+        font-size: 20px;
+        font-weight: 600;
+        color: #000080;
+        margin-bottom: 10px;
+      }
+      
+      .vehicle-record {
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+        background-color: #fafafa;
+      }
+      
+      .vehicle-record:last-child {
+        margin-bottom: 0;
+      }
+      
+      .record-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid #e0e0e0;
+      }
+      
+      .record-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: #000080;
+      }
+      
+      .record-status {
+        padding: 6px 12px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+      }
+      
+      .status-pending {
+        background-color: #fff3cd;
+        color: #856404;
+      }
+      
+      .status-paid {
+        background-color: #d4edda;
+        color: #155724;
+      }
+      
+      .result-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 12px 0;
+        border-bottom: 1px solid #eee;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      
+      .result-item:last-child {
+        border-bottom: none;
+      }
+      
+      .result-label {
+        color: #666;
+        flex: 1;
+        min-width: 150px;
+        font-weight: 500;
+      }
+      
+      .result-value {
+        font-weight: 600;
+        color: #333;
+        flex-shrink: 0;
+        text-align: right;
+        word-break: break-word;
+      }
+      
+      .edit-section {
+        margin-top: 20px;
+        padding-top: 0;
+      }
+      
+      .edit-field {
+        margin-bottom: 15px;
+      }
+      
+      .edit-field label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 500;
+        color: #333;
+        font-size: 14px;
+      }
+      
+      .edit-field input,
+      .edit-field textarea,
+      .edit-field select {
+        width: 100%;
+        padding: 12px 15px;
+        border: 2px solid #ddd;
+        border-radius: 4px;
+        font-size: 16px;
+        font-family: 'Poppins', sans-serif;
+        transition: border-color 0.3s ease;
+      }
+      
+      .edit-field textarea {
+        resize: vertical;
+        min-height: 80px;
+      }
+      
+      .edit-field input:focus,
+      .edit-field textarea:focus,
+      .edit-field select:focus {
+        outline: none;
+        border-color: #000080;
+      }
+      
+      .edit-field input:disabled,
+      .edit-field textarea:disabled,
+      .edit-field select:disabled {
+        background-color: #f5f5f5;
+        color: #999;
+        cursor: not-allowed;
+        opacity: 0.7;
+      }
+      
+      .edit-field input:invalid {
+        border-color: #dc3545;
+      }
+      
+      .edit-field input:invalid:focus {
+        border-color: #dc3545;
+        box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+      }
+      
+      .edit-field label::after {
+        content: '';
+      }
+      
+      .edit-field label[for*="tag"]::after,
+      .edit-field label[for*="ParkingLocation"]::after {
+        content: ' *';
+        color: #dc3545;
+      }
+      
+      .tag-issued-button {
+        width: 100%;
+        padding: 15px;
+        background-color: #28a745;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        font-size: 16px;
+        font-weight: 600;
+        font-family: 'Poppins', sans-serif;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+        margin-top: 15px;
+      }
+      
+      .tag-issued-button:hover {
+        background-color: #218838;
+      }
+      
+      .tag-issued-button:disabled {
+        background-color: #ccc;
+        cursor: not-allowed;
+      }
+      
+      .error-message {
+        background-color: #f8d7da;
+        color: #721c24;
+        padding: 15px;
+        border-radius: 4px;
+        margin-top: 20px;
+        display: none;
+      }
+      
+      .success-message {
+        background-color: #d4edda;
+        color: #155724;
+        padding: 15px;
+        border-radius: 4px;
+        margin-top: 20px;
+        display: none;
+      }
+      
+      .info-box {
+        background-color: #e8f4f8;
+        border-left: 4px solid #000080;
+        padding: 20px;
+        margin: 20px 0;
+        border-radius: 4px;
+      }
+      
+      .info-box p {
+        margin: 5px 0;
+        color: #333;
+        font-size: 14px;
+      }
+      
+      @media (max-width: 768px) {
+        .page-title {
+          font-size: 24px;
+          margin-bottom: 8px;
+        }
+        
+        .page-subtitle {
+          font-size: 14px;
+          margin-bottom: 20px;
+        }
+        
+        .header-content {
+          flex-direction: column;
+          gap: 15px;
+        }
+        
+        .header-title {
+          font-size: 18px;
+        }
+        
+        .header-logo {
+          height: 40px;
+        }
+        
+        .back-button {
+          width: 100%;
+          text-align: center;
+          padding: 12px 20px;
+        }
+        
+        .main-container {
+          margin: 15px auto;
+          padding: 0 15px;
+        }
+        
+        .search-container,
+        .results-container {
+          padding: 15px;
+          margin-bottom: 15px;
+        }
+        
+        .search-header {
+          margin: -15px -15px 15px -15px;
+          padding: 15px;
+        }
+        
+        .search-header h2 {
+          font-size: 20px;
+        }
+        
+        .search-header p {
+          font-size: 14px;
+        }
+        
+        .results-header {
+          margin: -15px -15px 15px -15px;
+          padding: 15px;
+        }
+        
+        .results-title {
+          font-size: 18px;
+        }
+        
+        .result-item {
+          flex-direction: column;
+          align-items: flex-start;
+          padding: 10px 0;
+        }
+        
+        .result-label {
+          font-size: 13px;
+          margin-bottom: 6px;
+          font-weight: 600;
+        }
+        
+        .result-value {
+          text-align: left;
+          font-size: 15px;
+          word-break: break-word;
+          width: 100%;
+        }
+        
+        .form-group input,
+        .edit-field input,
+        .edit-field textarea,
+        .edit-field select {
+          font-size: 16px;
+          padding: 14px;
+          min-height: 44px;
+        }
+        
+        .form-group label,
+        .edit-field label {
+          font-size: 14px;
+          margin-bottom: 8px;
+        }
+        
+        .search-button,
+        .tag-issued-button {
+          padding: 16px;
+          font-size: 16px;
+          min-height: 48px;
+        }
+        
+        .vehicle-record {
+          padding: 15px;
+        }
+        
+        .record-header {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 10px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <div class="header-content">
+        <div class="logo-container">
+          <img src="../assets/images/ace_risland_logo.png" alt="ACE by Risland Logo" class="header-logo">
+          <div class="header-title">The ACE</div>
+        </div>
+        <a href="../index.html" class="back-button">← Back to Home</a>
+      </div>
+    </div>
+    
+    <div class="main-container">
+      <h1 class="page-title">Boom Barrier Status</h1>
+      <p class="page-subtitle">Search for vehicle parking details by entering your door number</p>
+      
+      <div class="info-box">
+        <p><strong>Instructions:</strong></p>
+        <p>1. Enter your Door Number (e.g., A-1001, A1001)</p>
+        <p>2. Click "Search Details" to find all vehicle records</p>
+        <p>3. Update Tag #, Payment Status, and Comment as needed</p>
+        <p>4. Click "Tag Issued" to save the changes</p>
+      </div>
+      
+      <div class="search-container">
+        <div class="search-header">
+          <h2>Search Vehicle Details</h2>
+          <p>Enter your door number</p>
+        </div>
+        
+        <form id="searchForm">
+          <div class="form-group">
+            <label for="doorNumber">Door Number *</label>
+            <input type="text" id="doorNumber" name="doorNumber" placeholder="e.g., A-1001, A1001" required>
+          </div>
+          
+          <button type="submit" class="search-button">Search Details</button>
+        </form>
+      </div>
+      
+      <div id="errorMessage" class="error-message"></div>
+      <div id="successMessage" class="success-message"></div>
+      
+      <div id="results" class="results-container">
+        <div class="results-header">
+          <div class="results-title">Vehicle Parking Details</div>
+        </div>
+        <div id="vehicleRecords"></div>
+      </div>
+    </div>
+    
+    <script src="../scripts/boom-barrier-status.min.js"></script>
+  </body>
+</html>
+
+11
