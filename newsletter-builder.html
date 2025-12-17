@@ -2809,7 +2809,27 @@
                     </div>
                     ${pageElement.outerHTML}
                 `;
-                document.getElementById('pagesContainer').appendChild(pageWrapper);
+                
+                // Insert page in correct position based on page number (not just append)
+                const pagesContainer = document.getElementById('pagesContainer');
+                const existingPages = Array.from(pagesContainer.querySelectorAll('.page-wrapper'));
+                
+                // Find the correct insertion point (after all pages with lower page numbers)
+                let insertBefore = null;
+                for (const existingPage of existingPages) {
+                    const existingPageNum = parseInt(existingPage.getAttribute('data-page-id')) || 0;
+                    if (existingPageNum > pageNum) {
+                        insertBefore = existingPage;
+                        break;
+                    }
+                }
+                
+                if (insertBefore) {
+                    pagesContainer.insertBefore(pageWrapper, insertBefore);
+                } else {
+                    pagesContainer.appendChild(pageWrapper);
+                }
+                
                 pageCounter = Math.max(pageCounter, parseInt(pageNum));
                 
                 // Process images AFTER page is in DOM (so we can update the actual DOM elements)
@@ -3909,6 +3929,13 @@
             const pages = Array.from(document.querySelectorAll('.page-wrapper'))
                 .filter(page => page.style.display !== 'none');
             
+            // Sort pages by their original page number (data-page-id) to maintain correct order
+            pages.sort((a, b) => {
+                const aId = parseInt(a.getAttribute('data-page-id')) || 0;
+                const bId = parseInt(b.getAttribute('data-page-id')) || 0;
+                return aId - bId;
+            });
+            
             const ensureQuoteElements = (pageWrapper) => {
                 const preview = pageWrapper.querySelector('.newsletter-preview[data-page-type="content"]');
                 if (!preview) return;
@@ -3935,20 +3962,23 @@
 
             pages.forEach((page, index) => {
                 const pageNumber = page.querySelector('.page-number');
-                const pageId = index + 1;
-                const originalPageId = page.getAttribute('data-page-id') || pageId;
+                // Get the original page ID from data-page-id (the actual saved page number)
+                const originalPageId = parseInt(page.getAttribute('data-page-id')) || (index + 1);
                 const uniqueId = page.getAttribute('data-unique-id');
                 
-                // Keep original page ID and unique ID, but update display number
+                // Use the original page ID for display (not the DOM index)
+                const displayPageNumber = originalPageId;
+                
+                // Keep original page ID and unique ID
                 page.setAttribute('data-page-id', originalPageId);
                 if (uniqueId) {
                     page.setAttribute('data-unique-id', uniqueId);
                 }
-                pageNumber.textContent = `Page ${pageId}`;
+                pageNumber.textContent = `Page ${displayPageNumber}`;
 
                 // Page classification for styling (based on DISPLAY page number)
-                page.classList.toggle('is-first-page', pageId === 1);
-                page.classList.toggle('is-odd-except-first', pageId > 1 && pageId % 2 === 1);
+                page.classList.toggle('is-first-page', displayPageNumber === 1);
+                page.classList.toggle('is-odd-except-first', displayPageNumber > 1 && displayPageNumber % 2 === 1);
 
                 // Ensure quote elements exist (they will be shown only on is-odd-except-first)
                 ensureQuoteElements(page);
@@ -3977,7 +4007,7 @@
                         window.deletePage(id, uid);
                     });
                     // Hide delete button for page 1
-                    if (pageId === 1) {
+                    if (displayPageNumber === 1) {
                         newDeleteBtn.style.display = 'none';
                     } else {
                         newDeleteBtn.style.display = 'block';

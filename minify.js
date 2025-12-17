@@ -9,6 +9,7 @@ const filesToMinify = [
   { file: 'index.js', isJSX: false },
   { file: 'maintenance-calculator.js', isJSX: false },
   { file: 'property-tax-lookup.js', isJSX: false },
+  { file: 'boom-barrier-status.js', isJSX: false },
   { file: 'business-opportunities.jsx', isJSX: true },
   { file: 'membership-form.jsx', isJSX: true },
   { file: 'tenant-form.jsx', isJSX: true }
