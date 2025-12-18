@@ -260,7 +260,6 @@ function displayVehicleRecords(records) {
   const firstRecord = records[0];
   const commonPendingAmount = parsePendingAmount(firstRecord.pending);
   const commonIsPending = isPaymentPending(firstRecord.pending);
-  const commonParkingLocation = (firstRecord.parkingLocation || '').toLowerCase();
   // Try to get door number from doorNumber, parkingName, or name fields
   const doorNumber = normalizeDoorNumber(
     firstRecord.doorNumber || 
@@ -278,6 +277,9 @@ function displayVehicleRecords(records) {
     const isPending = isPaymentPending(record.pending);
     const statusClass = isPending ? 'status-pending' : 'status-paid';
     const statusText = isPending ? 'Pending' : 'Paid';
+    const parkingLocation = (record.parkingLocation || '').toLowerCase();
+    const isStilt = parkingLocation === 'stilt';
+    const isBasement = parkingLocation === 'basement';
     
     // Determine vehicle type (2W or 4W)
     const vehicleType = (record.type || '').toLowerCase();
@@ -304,6 +306,14 @@ function displayVehicleRecords(records) {
         <div class="edit-field">
           <label for="tag-${index}">Tag # *</label>
           <input type="text" id="tag-${index}" value="${escapeHtml(record.tag || '')}" placeholder="Enter tag number (numbers only)" pattern="[0-9]+" required>
+        </div>
+        <div class="edit-field">
+          <label for="vehicleParkingLocation-${index}">Parking Location *</label>
+          <select id="vehicleParkingLocation-${index}" required>
+            <option value="">Select Parking Location</option>
+            <option value="stilt" ${isStilt ? 'selected' : ''}>Stilt</option>
+            <option value="basement" ${isBasement ? 'selected' : ''}>Basement</option>
+          </select>
         </div>
         <div class="edit-field">
           <label for="comment-${index}">Comment</label>
@@ -339,23 +349,9 @@ function displayVehicleRecords(records) {
   commonFieldsDiv.style.marginBottom = '20px';
   commonFieldsDiv.style.marginTop = '20px';
   commonFieldsDiv.style.border = '2px solid #000080';
-  
-  const isStilt = commonParkingLocation === 'stilt';
-  const isBasement = commonParkingLocation === 'basement';
-  
+
   commonFieldsDiv.innerHTML = `
-    <div class="record-header">
-      <div class="record-title">Common Fields (Applied to All Vehicles)</div>
-    </div>
     <div class="edit-section">
-      <div class="edit-field">
-        <label for="commonParkingLocation">Parking Location *</label>
-        <select id="commonParkingLocation" required>
-          <option value="">Select Parking Location</option>
-          <option value="stilt" ${isStilt ? 'selected' : ''}>Stilt</option>
-          <option value="basement" ${isBasement ? 'selected' : ''}>Basement</option>
-        </select>
-      </div>
       <div class="edit-field">
         <label for="commonPaymentStatus">Payment Status</label>
         <select id="commonPaymentStatus" ${!commonIsPending ? 'disabled' : ''}>
@@ -433,12 +429,11 @@ async function handleAllTagsIssued() {
   button.textContent = 'Updating...';
   
   try {
-    // Get common fields (Parking Location and Payment Status)
-    const commonParkingLocationInput = document.getElementById('commonParkingLocation');
+    // Get common field (Payment Status)
     const commonPaymentStatusSelect = document.getElementById('commonPaymentStatus');
     
-    if (!commonParkingLocationInput || !commonPaymentStatusSelect) {
-      showError('Common fields not found');
+    if (!commonPaymentStatusSelect) {
+      showError('Common payment status field not found');
       button.disabled = false;
       button.textContent = currentRecords.length === 1 ? 'Tag Issued' : 'Tag(s) Issued';
       return;
@@ -460,15 +455,6 @@ async function handleAllTagsIssued() {
       return;
     }
     
-    // Get common field values
-    const commonParkingLocation = commonParkingLocationInput.value.trim();
-    if (!commonParkingLocation) {
-      showError('Please select Parking Location');
-      button.disabled = false;
-      button.textContent = currentRecords.length === 1 ? 'Tag Issued' : 'Tag(s) Issued';
-      return;
-    }
-    
     let commonPendingAmount = 0;
     if (commonPaymentStatusSelect) {
       const selectedValue = commonPaymentStatusSelect.value;
@@ -479,15 +465,16 @@ async function handleAllTagsIssued() {
       }
     }
     
-    // Collect individual updates (Tag # and Comment per record)
+    // Collect individual updates (Tag #, Parking Location and Comment per record)
     const updates = [];
     
     for (let i = 0; i < currentRecords.length; i++) {
       const record = currentRecords[i];
       const tagInput = document.getElementById(`tag-${i}`);
       const commentTextarea = document.getElementById(`comment-${i}`);
+      const parkingLocationSelect = document.getElementById(`vehicleParkingLocation-${i}`);
       
-      if (!tagInput || !commentTextarea) {
+      if (!tagInput || !commentTextarea || !parkingLocationSelect) {
         continue;
       }
       
@@ -507,10 +494,19 @@ async function handleAllTagsIssued() {
         return;
       }
       
+      const parkingLocationValue = parkingLocationSelect.value.trim();
+      if (!parkingLocationValue) {
+        showError(`Parking Location is required for Vehicle ${i + 1}`);
+        button.disabled = false;
+        button.textContent = currentRecords.length === 1 ? 'Tag Issued' : 'Tag(s) Issued';
+        return;
+      }
+      
       updates.push({
         doorNumber: doorNumber,
         vehicleNumber: record.vehicleNumber || '',
         tag: tagValue,
+        parkingLocation: parkingLocationValue,
         comment: commentTextarea.value.trim()
       });
     }
@@ -536,7 +532,6 @@ async function handleAllTagsIssued() {
             action: 'updateMultipleBoomBarrier',
             commonFields: {
               doorNumber: doorNumber,
-              parkingLocation: commonParkingLocation,
               pending: commonPendingAmount.toString()
             },
             updates: updates
@@ -562,26 +557,7 @@ async function handleAllTagsIssued() {
     }
     
     // Update local data
-    // First, update common fields (parking location and pending) for all records with same door number
-    boomBarrierData.forEach(r => {
-      const rDoorNumber = normalizeDoorNumber(
-        r.doorNumber || 
-        extractDoorNumber(r.parkingName || '') || 
-        extractDoorNumber(r.name || '')
-      );
-      if (rDoorNumber === doorNumber) {
-        r.parkingLocation = commonParkingLocation;
-        r.pending = commonPendingAmount.toString();
-      }
-    });
-    
-    // Update current records with common fields
-    currentRecords.forEach(record => {
-      record.parkingLocation = commonParkingLocation;
-      record.pending = commonPendingAmount.toString();
-    });
-    
-    // Then, update individual fields (tag and comment) per record
+    // Update individual fields (tag, parking location, pending and comment) per record
     let successCount = 0;
     for (let i = 0; i < updates.length; i++) {
       const update = updates[i];
@@ -601,12 +577,16 @@ async function handleAllTagsIssued() {
       if (originalRecord) {
         originalRecord.tag = update.tag;
         originalRecord.comment = update.comment;
+        originalRecord.parkingLocation = update.parkingLocation;
+        originalRecord.pending = commonPendingAmount.toString();
       }
       
       // Update current records
       if (record) {
         record.tag = update.tag;
         record.comment = update.comment;
+        record.parkingLocation = update.parkingLocation;
+        record.pending = commonPendingAmount.toString();
       }
       
       successCount++;

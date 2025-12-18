@@ -185,18 +185,18 @@ function doPost(e) {
     
     // Handle updateMultipleBoomBarrier action (for updating multiple records at once)
     if (action === 'updateMultipleBoomBarrier') {
-      const commonFields = requestData.commonFields; // {doorNumber, parkingLocation, pending}
-      const updates = requestData.updates; // Array of {doorNumber, vehicleNumber, tag, comment}
+      const commonFields = requestData.commonFields; // {doorNumber, pending}
+      const updates = requestData.updates; // Array of {doorNumber, vehicleNumber, tag, parkingLocation, comment}
       
       const results = [];
       let successCount = 0;
       let errorCount = 0;
       
-      // First, update common fields (parking location and pending) for all records with same door number
+      // First, update common fields (currently only pending) for all records with same door number
       if (commonFields && commonFields.doorNumber) {
         const commonResult = updateBoomBarrierCommonFields(
           commonFields.doorNumber,
-          commonFields.parkingLocation || '',
+          '', // parkingLocation is now per-vehicle
           commonFields.pending || '0'
         );
         results.push({ type: 'common', result: commonResult });
@@ -207,7 +207,7 @@ function doPost(e) {
         }
       }
       
-      // Then, update individual records (tag and comment)
+      // Then, update individual records (tag, parking location and comment)
       if (updates && Array.isArray(updates) && updates.length > 0) {
         for (let i = 0; i < updates.length; i++) {
           const update = updates[i];
@@ -215,8 +215,8 @@ function doPost(e) {
             update.doorNumber,
             update.vehicleNumber,
             update.tag || '',
-            '', // pending - handled by common fields
-            '', // parkingLocation - handled by common fields
+            commonFields && commonFields.pending ? commonFields.pending : '', // pending - common for this batch
+            update.parkingLocation || '',
             update.comment || ''
           );
           results.push({ type: 'individual', result: result });
@@ -426,6 +426,16 @@ function updateBoomBarrierRecord(doorNumber, vehicleNumber, tag, pending, parkin
     // Update Comment (Column I, index 8)
     if (COLUMN_INDICES.COMMENT !== undefined) {
       sheet.getRange(foundRow, COLUMN_INDICES.COMMENT + 1).setValue(comment);
+    }
+    
+    // Update Pending, if provided
+    if (pending !== '' && COLUMN_INDICES.PENDING !== undefined) {
+      sheet.getRange(foundRow, COLUMN_INDICES.PENDING + 1).setValue(pending);
+    }
+    
+    // Update Parking Location, if provided
+    if (parkingLocation !== '' && COLUMN_INDICES.PARKING_LOCATION !== undefined) {
+      sheet.getRange(foundRow, COLUMN_INDICES.PARKING_LOCATION + 1).setValue(parkingLocation);
     }
     
     Logger.log('Updated row ' + foundRow + ' for door number: ' + doorNumber + ', vehicle: ' + vehicleNumber);
