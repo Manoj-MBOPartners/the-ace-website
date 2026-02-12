@@ -1037,7 +1037,21 @@ async function deleteAnnouncement(id) {
     }
     
     showMessage('Announcement deleted successfully', 'success');
+    
+    // Reload announcements and refresh the display
     await loadAnnouncements();
+    
+    // Refresh the display based on current view mode
+    if (displayMode === 'announcements') {
+      displayAnnouncementsOnly();
+    } else if (displayMode === 'both') {
+      displayCombinedItems();
+    } else if (displayMode === 'faqs') {
+      displayFAQsOnly();
+    } else {
+      // If not in any display mode, show announcements only
+      displayAnnouncementsOnly();
+    }
   } catch (error) {
     console.error('Error deleting announcement:', error);
     showMessage(`Error deleting announcement: ${error.message}`, 'error');
@@ -1957,7 +1971,20 @@ async function deleteFAQ(id) {
         window.location.href = window.location.pathname;
       }, 1500);
     } else {
-      loadFAQs();
+      // Reload FAQs and refresh the display
+      await loadFAQs();
+      
+      // Refresh the display based on current view mode
+      if (displayMode === 'faqs') {
+        displayFAQsOnly();
+      } else if (displayMode === 'announcements') {
+        displayAnnouncementsOnly();
+      } else if (displayMode === 'both') {
+        displayCombinedItems();
+      } else {
+        // If not in any display mode, show FAQs only
+        displayFAQsOnly();
+      }
     }
   } catch (error) {
     console.error('Error deleting FAQ:', error);

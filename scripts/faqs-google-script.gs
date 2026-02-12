@@ -1,389 +1,198 @@
 /**
- * Google Apps Script for FAQs and Announcements Management
- * Supports CRUD operations for both FAQs (Sheet1) and Announcements (Sheet2)
- * 
- * SETUP INSTRUCTIONS:
- * 1. Open your Google Sheet with FAQs and Announcements
- * 2. Go to Extensions > Apps Script
- * 3. Paste this code
- * 4. Update SHEET_ID below with your actual Google Sheet ID
- * 5. Save the script
- * 6. Deploy > New deployment > Type: Web app
- * 7. Execute as: Me
- * 8. Who has access: Anyone (IMPORTANT: Must be "Anyone" for CORS to work)
- * 9. Click Deploy
- * 10. Copy the Web App URL and update it in faqs.js
+ * Google Apps Script for TARA: FAQs and Announcements Management
+ * Now with Asynchronous Background Syncing.
  */
 
 const SHEET_ID = "1c6pXD1hL-GmIqfnCIwVUAlRGv75AiSbSkIJG9_6XNeA";
 const BUCKET_NAME = "tara_vault";
-const FILE_NAME = "FAQ.csv";
-const PROJECT_ID = "project-049fd3bf-7c2e-4a73-890";
+const PROJECT_ID = "656911601245"; 
 const DATA_STORE_ID = "tara2";
 
-/**
- * Handles GET requests - Fetch FAQs or Announcements
- */
 function doGet(e) {
   try {
-    const type = e.parameter.type || 'faqs'; // 'faqs' or 'announcements'
-    const rowNumber = e.parameter.row; // Optional: specific row number
-    
+    const type = e.parameter.type || 'faqs';
     const ss = SpreadsheetApp.openById(SHEET_ID);
-    let sheet;
+    const sheet = (type === 'announcements') ? (ss.getSheets()[1] || ss.insertSheet('Sheet2')) : ss.getSheets()[0];
     
-    if (type === 'announcements') {
-      sheet = ss.getSheets()[1] || ss.getSheets()[0]; // Sheet2 (index 1) or fallback to Sheet1
-    } else {
-      sheet = ss.getSheets()[0]; // Sheet1 for FAQs
-    }
+    const data = sheet.getDataRange().getValues();
     
-    const rows = sheet.getDataRange().getValues();
+    // Skip header row (row 1, index 0)
+    const rows = data.slice(1);
     
-    if (rowNumber) {
-      // Return specific row
-      const rowIndex = parseInt(rowNumber);
-      if (rowIndex > 0 && rowIndex <= rows.length) {
-        const row = rows[rowIndex - 1]; // Convert to 0-based index
-        if (type === 'announcements') {
-          return ContentService.createTextOutput(JSON.stringify({
-            status: 'success',
-            data: {
-              row: rowIndex,
-              timestamp: row[0] || "",
-              announcement: row[1] || ""
-            }
-          })).setMimeType(ContentService.MimeType.JSON);
-        } else {
-          return ContentService.createTextOutput(JSON.stringify({
-            status: 'success',
-            data: {
-              row: rowIndex,
-              question: row[0] || "",
-              answer: row[1] || "",
-              timestamp: row[2] || ""
-            }
-          })).setMimeType(ContentService.MimeType.JSON);
-        }
-      } else {
-        throw new Error('Invalid row number');
-      }
-    } else {
-      // Return all rows (skip header)
+    const items = rows.map((row, index) => {
+      const rowNum = index + 2; // +2 because we skipped header and arrays are 0-indexed
       if (type === 'announcements') {
-        const announcements = rows.slice(1).map((row, index) => ({
-          id: `announcement-${index + 2}`, // Row number (index + 2 because we skip header)
-          row: index + 2,
-          timestamp: row[0] || "",
-          announcement: row[1] || ""
-        }));
-        return ContentService.createTextOutput(JSON.stringify(announcements))
-                             .setMimeType(ContentService.MimeType.JSON);
+        return {
+          id: `announcement-${rowNum}`,
+          row: rowNum,
+          timestamp: row[0] ? row[0].toString() : '',
+          announcement: row[1] ? row[1].toString() : ''
+        };
       } else {
-        const faqs = rows.slice(1).map((row, index) => ({
-          id: `faq-${index + 2}`, // Row number (index + 2 because we skip header)
-          row: index + 2,
-          question: row[0] || "",
-          answer: row[1] || "",
-          timestamp: row[2] || ""
-        }));
-        return ContentService.createTextOutput(JSON.stringify(faqs))
-                             .setMimeType(ContentService.MimeType.JSON);
+        return {
+          id: `faq-${rowNum}`,
+          row: rowNum,
+          question: row[0] ? row[0].toString() : '',
+          answer: row[1] ? row[1].toString() : '',
+          timestamp: row[2] ? row[2].toString() : ''
+        };
       }
-    }
+    }).filter(item => {
+      // Filter out empty rows
+      if (type === 'announcements') {
+        return item.announcement && item.announcement.trim() !== '';
+      } else {
+        return item.question && item.question.trim() !== '' && item.answer && item.answer.trim() !== '';
+      }
+    });
+    
+    return createJsonResponse(items);
   } catch (err) {
-    return ContentService.createTextOutput(JSON.stringify({ 
-      status: 'error',
-      data: { error: err.toString() }
-    })).setMimeType(ContentService.MimeType.JSON);
+    return createJsonResponse({ status: 'error', data: { error: err.toString() } });
   }
 }
 
-/**
- * Handles POST requests - All CRUD operations
- */
 function doPost(e) {
   try {
     const data = JSON.parse(e.postData.contents);
     const action = data.action;
-    const type = data.type || 'faqs'; // 'faqs' or 'announcements'
-    
+    const type = data.type || 'faqs';
     const ss = SpreadsheetApp.openById(SHEET_ID);
-    let sheet;
+    const sheet = (type === 'announcements') ? (ss.getSheets()[1] || ss.insertSheet('Sheet2')) : ss.getSheets()[0];
     
-    if (type === 'announcements') {
-      // Get or create Sheet2 for announcements
-      const sheets = ss.getSheets();
-      if (sheets.length > 1) {
-        sheet = sheets[1]; // Sheet2
-      } else {
-        // Create Sheet2 if it doesn't exist
-        sheet = ss.insertSheet('Sheet2');
-        // Add header row
-        sheet.getRange(1, 1, 1, 2).setValues([['Timestamp', 'Announcement']]);
-      }
-    } else {
-      sheet = ss.getSheets()[0]; // Sheet1 for FAQs
-    }
-    
+    let result;
     switch (action) {
-      case 'getFAQs':
-      case 'getAnnouncements':
-        return handleGet(type, sheet, data.row);
-      
-      case 'addFAQ':
-      case 'addAnnouncement':
-        return handleAdd(type, sheet, data.data);
-      
-      case 'updateFAQ':
-      case 'updateAnnouncement':
-        return handleUpdate(type, sheet, data.id || data.row, data.data);
-      
-      case 'deleteFAQ':
-      case 'deleteAnnouncement':
-        return handleDelete(type, sheet, data.id || data.row);
-      
-      default:
-        throw new Error('Unknown action: ' + action);
+      case 'addFAQ': case 'addAnnouncement':
+        result = handleAdd(type, sheet, data.data); break;
+      case 'updateFAQ': case 'updateAnnouncement':
+        result = handleUpdate(type, sheet, data.id || data.row, data.data); break;
+      case 'deleteFAQ': case 'deleteAnnouncement':
+        result = handleDelete(type, sheet, data.id || data.row); break;
+      default: throw new Error('Unknown action: ' + action);
     }
+
+    // --- ASYNC TRIGGER ---
+    // Schedules the GCS push to happen 1 second after this response returns.
+    // We pass 'faqs' or 'announcements' via a temporary property or just sync both.
+    ScriptApp.newTrigger('backgroundSync')
+             .timeBased()
+             .after(1000)
+             .create();
+
+    return createJsonResponse({ status: 'success', message: `${type} updated. Syncing with TARA in background.` });
   } catch (err) {
-    return ContentService.createTextOutput(JSON.stringify({
-      status: 'error',
-      data: { error: err.toString() }
-    })).setMimeType(ContentService.MimeType.JSON);
+    return createJsonResponse({ status: 'error', data: { error: err.toString() } });
   }
 }
 
 /**
- * Handle GET operation
+ * Background Wrapper
+ * Triggered functions cannot take arguments, so we call our sync here.
  */
-function handleGet(type, sheet, rowNumber) {
-  const rows = sheet.getDataRange().getValues();
+function backgroundSync() {
+  // Clean up the trigger so it doesn't run again
+  const triggers = ScriptApp.getProjectTriggers();
+  for (let i = 0; i < triggers.length; i++) {
+    if (triggers[i].getHandlerFunction() === 'backgroundSync') {
+      ScriptApp.deleteTrigger(triggers[i]);
+    }
+  }
   
-  if (rowNumber) {
-    const rowIndex = parseInt(rowNumber);
-    if (rowIndex > 0 && rowIndex <= rows.length) {
-      const row = rows[rowIndex - 1];
-      if (type === 'announcements') {
-        return ContentService.createTextOutput(JSON.stringify({
-          status: 'success',
-          data: {
-            row: rowIndex,
-            timestamp: row[0] || "",
-            announcement: row[1] || ""
-          }
-        })).setMimeType(ContentService.MimeType.JSON);
-      } else {
-        return ContentService.createTextOutput(JSON.stringify({
-          status: 'success',
-          data: {
-            row: rowIndex,
-            question: row[0] || "",
-            answer: row[1] || "",
-            timestamp: row[2] || ""
-          }
-        })).setMimeType(ContentService.MimeType.JSON);
-      }
-    } else {
-      throw new Error('Invalid row number');
-    }
-  } else {
-    // Return all (skip header)
-    if (type === 'announcements') {
-      const items = rows.slice(1).map((row, index) => ({
-        id: `announcement-${index + 2}`,
-        row: index + 2,
-        timestamp: row[0] || "",
-        announcement: row[1] || ""
-      }));
-      return ContentService.createTextOutput(JSON.stringify({
-        status: 'success',
-        data: items
-      })).setMimeType(ContentService.MimeType.JSON);
-    } else {
-      const items = rows.slice(1).map((row, index) => ({
-        id: `faq-${index + 2}`,
-        row: index + 2,
-        question: row[0] || "",
-        answer: row[1] || "",
-        timestamp: row[2] || ""
-      }));
-      return ContentService.createTextOutput(JSON.stringify({
-        status: 'success',
-        data: items
-      })).setMimeType(ContentService.MimeType.JSON);
-    }
-  }
+  // Sync both to be safe, or you could store the 'type' in ScriptProperties
+  pushFileToGCS('faqs');
+  pushFileToGCS('announcements');
 }
 
-/**
- * Handle ADD operation
- */
+// --- CRUD Handlers (Updated to remove direct sync) ---
+
 function handleAdd(type, sheet, data) {
   const itemsToAdd = Array.isArray(data) ? data : [data];
-  const timestamp = new Date();
-  
+  const now = new Date();
   itemsToAdd.forEach(item => {
-    if (type === 'announcements') {
-      if (item.announcement) {
-        sheet.appendRow([timestamp, item.announcement]);
-      }
-    } else {
-      if (item.question && item.answer) {
-        sheet.appendRow([item.question, item.answer, timestamp]);
-      }
-    }
+    (type === 'announcements') ? sheet.appendRow([now, item.announcement]) : sheet.appendRow([item.question, item.answer, now]);
   });
-  
-  // Trigger GCS update and re-index (only for FAQs)
-  if (type === 'faqs') {
-    pushFileToGCS(SHEET_ID);
-  }
-  
-  return ContentService.createTextOutput(JSON.stringify({
-    status: 'success',
-    data: { message: `Successfully added ${itemsToAdd.length} ${type === 'announcements' ? 'announcement(s)' : 'FAQ(s)'}` }
-  })).setMimeType(ContentService.MimeType.JSON);
+  return { status: 'success' };
 }
 
-/**
- * Handle UPDATE operation
- */
 function handleUpdate(type, sheet, idOrRow, data) {
-  let rowIndex;
-  
-  // Extract row number from ID (e.g., "faq-5" -> 5) or use direct row number
-  if (typeof idOrRow === 'string' && idOrRow.includes('-')) {
-    rowIndex = parseInt(idOrRow.split('-')[1]);
-  } else {
-    rowIndex = parseInt(idOrRow);
-  }
-  
-  const rows = sheet.getDataRange().getValues();
-  
-  if (rowIndex < 2 || rowIndex > rows.length) {
-    throw new Error(`${type === 'announcements' ? 'Announcement' : 'FAQ'} not found with row: ${rowIndex}`);
-  }
-  
-  // Update the row (0-based index)
-  if (type === 'announcements') {
-    sheet.getRange(rowIndex, 1).setValue(new Date()); // Update timestamp
-    sheet.getRange(rowIndex, 2).setValue(data.announcement || '');
-  } else {
-    sheet.getRange(rowIndex, 1).setValue(data.question || '');
-    sheet.getRange(rowIndex, 2).setValue(data.answer || '');
-    sheet.getRange(rowIndex, 3).setValue(new Date()); // Update timestamp
-  }
-  
-  // Trigger GCS update and re-index (only for FAQs)
-  if (type === 'faqs') {
-    pushFileToGCS(SHEET_ID);
-  }
-  
-  return ContentService.createTextOutput(JSON.stringify({
-    status: 'success',
-    data: { message: `${type === 'announcements' ? 'Announcement' : 'FAQ'} updated successfully` }
-  })).setMimeType(ContentService.MimeType.JSON);
+  const rowIndex = extractRowIndex(idOrRow);
+  const now = new Date();
+  (type === 'announcements') ? sheet.getRange(rowIndex, 1, 1, 2).setValues([[now, data.announcement]]) : sheet.getRange(rowIndex, 1, 1, 3).setValues([[data.question, data.answer, now]]);
+  return { status: 'success' };
 }
 
-/**
- * Handle DELETE operation
- */
 function handleDelete(type, sheet, idOrRow) {
-  let rowIndex;
-  
-  // Extract row number from ID (e.g., "faq-5" -> 5) or use direct row number
-  if (typeof idOrRow === 'string' && idOrRow.includes('-')) {
-    rowIndex = parseInt(idOrRow.split('-')[1]);
-  } else {
-    rowIndex = parseInt(idOrRow);
-  }
-  
-  const rows = sheet.getDataRange().getValues();
-  
-  if (rowIndex < 2 || rowIndex > rows.length) {
-    throw new Error(`${type === 'announcements' ? 'Announcement' : 'FAQ'} not found with row: ${rowIndex}`);
-  }
-  
-  // Delete the row
+  const rowIndex = extractRowIndex(idOrRow);
   sheet.deleteRow(rowIndex);
-  
-  // Trigger GCS update and re-index (only for FAQs)
-  if (type === 'faqs') {
-    pushFileToGCS(SHEET_ID);
-  }
-  
-  return ContentService.createTextOutput(JSON.stringify({
-    status: 'success',
-    data: { message: `${type === 'announcements' ? 'Announcement' : 'FAQ'} deleted successfully` }
-  })).setMimeType(ContentService.MimeType.JSON);
+  return { status: 'success' };
 }
 
-/**
- * Push FAQ data to Google Cloud Storage
- */
-function pushFileToGCS(sheetId) {
+// --- Infrastructure ---
+
+function pushFileToGCS(type) {
+  const fileName = (type === 'announcements') ? "Announcements.csv" : "FAQ.csv";
+  const sheetIndex = (type === 'announcements') ? 1 : 0;
+
   try {
-    const ss = SpreadsheetApp.openById(sheetId);
-    const sheet = ss.getSheets()[0];
+    const ss = SpreadsheetApp.openById(SHEET_ID);
+    const sheet = ss.getSheets()[sheetIndex];
     const data = sheet.getDataRange().getValues();
     
-    // Proper CSV escaping for commas and quotes
-    let csvContent = data.map(row => 
-      row.map(cell => `"${cell.toString().replace(/"/g, '""')}"`).join(",")
-    ).join("\n");
-    
-    const blob = Utilities.newBlob(csvContent, "text/csv", FILE_NAME);
+    // Using the successful CSV format from your manual import
+    let csvRows = data.map((row, index) => {
+      if (index === 0) {
+        return (type === 'announcements') ? "announcement,timestamp" : "question,answer,timestamp";
+      }
+      return row.map(cell => {
+        const val = (cell === null || cell === undefined) ? "" : cell.toString();
+        return `"${val.replace(/"/g, '""')}"`;
+      }).join(",");
+    });
 
-    // Upload to GCS
-    const url = `https://storage.googleapis.com/upload/storage/v1/b/${BUCKET_NAME}/o?uploadType=media&name=${FILE_NAME}`;
-    const options = {
+    const blob = Utilities.newBlob(csvRows.join("\n"), "text/csv", fileName);
+    
+    UrlFetchApp.fetch(`https://storage.googleapis.com/upload/storage/v1/b/${BUCKET_NAME}/o?uploadType=media&name=${fileName}`, {
       method: "POST",
       contentType: "text/csv",
       payload: blob.getBytes(),
-      headers: { Authorization: "Bearer " + ScriptApp.getOAuthToken() },
-      muteHttpExceptions: true
-    };
+      headers: { Authorization: "Bearer " + ScriptApp.getOAuthToken() }
+    });
 
-    const response = UrlFetchApp.fetch(url, options);
-    
-    if (response.getResponseCode() == 200) {
-      console.log("GCS Upload Success");
-      triggerVertexAIImport(PROJECT_ID, DATA_STORE_ID, BUCKET_NAME, FILE_NAME);
-    } else {
-      console.error("GCS Upload Failed: " + response.getContentText());
-      // Don't throw error - allow FAQ operations to succeed even if GCS fails
-    }
+    triggerVertexAIImport(fileName);
   } catch (err) {
-    console.error("Error in pushFileToGCS: " + err.toString());
-    // Don't throw error - allow FAQ operations to succeed even if GCS fails
+    Logger.log(`Sync Error: ${err}`);
   }
 }
 
-/**
- * Trigger Vertex AI re-indexing
- */
-function triggerVertexAIImport(projectId, dataStoreId, bucket, file) {
-  try {
-    const url = `https://discoveryengine.googleapis.com/v1/projects/${projectId}/locations/global/collections/default_collection/dataStores/${dataStoreId}/branches/0/documents:import`;
-    
-    const payload = {
-      gcsSource: { inputUris: [`gs://${bucket}/${file}`] },
-      reconciliationMode: "INCREMENTAL"
-    };
+function triggerVertexAIImport(fileName) {
+  const url = `https://discoveryengine.googleapis.com/v1alpha/projects/${PROJECT_ID}/locations/global/collections/default_collection/dataStores/${DATA_STORE_ID}/branches/0/documents:import`;
+  
+  const payload = {
+    "gcsSource": { 
+      "inputUris": [`gs://${BUCKET_NAME}/${fileName}`],
+      "dataSchema": "content-with-faq-csv" 
+    },
+    "reconciliationMode": "FULL",
+    "autoGenerateIds": true
+  };
 
-    const options = {
-      method: "POST",
-      contentType: "application/json",
-      payload: JSON.stringify(payload),
-      headers: { Authorization: "Bearer " + ScriptApp.getOAuthToken() },
-      muteHttpExceptions: true
-    };
+  UrlFetchApp.fetch(url, {
+    method: "POST",
+    contentType: "application/json",
+    payload: JSON.stringify(payload),
+    headers: { Authorization: "Bearer " + ScriptApp.getOAuthToken() },
+    muteHttpExceptions: true
+  });
+}
 
-    const response = UrlFetchApp.fetch(url, options);
-    console.log("Vertex AI Re-index Triggered: " + response.getContentText());
-  } catch (err) {
-    console.error("Error in triggerVertexAIImport: " + err.toString());
-    // Don't throw error - allow FAQ operations to succeed even if re-index fails
-  }
+// --- Utilities ---
+function createJsonResponse(data) {
+  return ContentService.createTextOutput(JSON.stringify(data))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function extractRowIndex(idOrRow) {
+  const index = (typeof idOrRow === 'string' && idOrRow.includes('-')) ? parseInt(idOrRow.split('-')[1]) : parseInt(idOrRow);
+  if (isNaN(index) || index < 2) throw new Error("Invalid Row");
+  return index;
 }
