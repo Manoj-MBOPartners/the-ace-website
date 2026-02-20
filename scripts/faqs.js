@@ -1013,8 +1013,7 @@ async function deleteAnnouncement(id) {
   try {
     const response = await fetch(GOOGLE_SCRIPT_URL, {
       method: 'POST',
-      mode: 'cors',
-      cache: 'no-store',
+      redirect: 'follow',
       headers: {
         'Content-Type': 'text/plain;charset=utf-8',
       },
@@ -1272,8 +1271,7 @@ async function handleInlineSubmit(event) {
       
       const faqResponse = await fetch(GOOGLE_SCRIPT_URL, {
         method: 'POST',
-        mode: 'cors',
-        cache: 'no-store',
+        redirect: 'follow',
         headers: {
           'Content-Type': 'text/plain;charset=utf-8',
         },
@@ -1301,8 +1299,7 @@ async function handleInlineSubmit(event) {
       
       const annResponse = await fetch(GOOGLE_SCRIPT_URL, {
         method: 'POST',
-        mode: 'cors',
-        cache: 'no-store',
+        redirect: 'follow',
         headers: {
           'Content-Type': 'text/plain;charset=utf-8',
         },
@@ -1455,8 +1452,7 @@ async function handleInlineAnnouncementSubmit(event) {
     
     const response = await fetch(GOOGLE_SCRIPT_URL, {
       method: 'POST',
-      mode: 'cors',
-      cache: 'no-store',
+      redirect: 'follow',
       headers: {
         'Content-Type': 'text/plain;charset=utf-8',
       },
@@ -1586,8 +1582,7 @@ async function handleAnnouncementSubmit(event) {
     
     const response = await fetch(GOOGLE_SCRIPT_URL, {
       method: 'POST',
-      mode: 'cors',
-      cache: 'no-store',
+      redirect: 'follow',
       headers: {
         'Content-Type': 'text/plain;charset=utf-8',
       },
@@ -1691,8 +1686,7 @@ async function saveInlineFAQ(id) {
   try {
     const response = await fetch(GOOGLE_SCRIPT_URL, {
       method: 'POST',
-      mode: 'cors',
-      cache: 'no-store',
+      redirect: 'follow',
       headers: {
         'Content-Type': 'text/plain;charset=utf-8',
       },
@@ -1810,8 +1804,7 @@ async function saveInlineAnnouncement(id) {
   try {
     const response = await fetch(GOOGLE_SCRIPT_URL, {
       method: 'POST',
-      mode: 'cors',
-      cache: 'no-store',
+      redirect: 'follow',
       headers: {
         'Content-Type': 'text/plain;charset=utf-8',
       },
@@ -1937,8 +1930,7 @@ async function deleteFAQ(id) {
   try {
     const response = await fetch(GOOGLE_SCRIPT_URL, {
       method: 'POST',
-      mode: 'cors',
-      cache: 'no-store',
+      redirect: 'follow',
       headers: {
         'Content-Type': 'text/plain;charset=utf-8',
       },
@@ -2056,8 +2048,7 @@ async function handleSubmit(event) {
     
     const response = await fetch(GOOGLE_SCRIPT_URL, {
       method: 'POST',
-      mode: 'cors',
-      cache: 'no-store',
+      redirect: 'follow',
       headers: {
         'Content-Type': 'text/plain;charset=utf-8',
       },

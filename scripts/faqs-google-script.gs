@@ -130,50 +130,67 @@ function handleDelete(type, sheet, idOrRow) {
 // --- Infrastructure ---
 
 function pushFileToGCS(type) {
-  const fileName = (type === 'announcements') ? "Announcements.csv" : "FAQ.csv";
+  const fileName = (type === 'announcements') 
+    ? "Announcements.txt" 
+    : "FAQ.txt";
+
   const sheetIndex = (type === 'announcements') ? 1 : 0;
 
   try {
     const ss = SpreadsheetApp.openById(SHEET_ID);
     const sheet = ss.getSheets()[sheetIndex];
     const data = sheet.getDataRange().getValues();
-    
-    // Using the successful CSV format from your manual import
-    let csvRows = data.map((row, index) => {
-      if (index === 0) {
-        return (type === 'announcements') ? "announcement,timestamp" : "question,answer,timestamp";
+
+    // Convert entire sheet into unstructured plain text
+    let textContent = "";
+
+    data.forEach((row, index) => {
+      if (type === 'announcements') {
+        if (index !== 0) {
+          textContent += `Announcement:\n${row[0]}\n`;
+          textContent += `Timestamp: ${row[1]}\n\n`;
+        }
+      } else {
+        if (index !== 0) {
+          textContent += `Question:\n${row[0]}\n`;
+          textContent += `Answer:\n${row[1]}\n`;
+          textContent += `Timestamp: ${row[2]}\n\n`;
+        }
       }
-      return row.map(cell => {
-        const val = (cell === null || cell === undefined) ? "" : cell.toString();
-        return `"${val.replace(/"/g, '""')}"`;
-      }).join(",");
     });
 
-    const blob = Utilities.newBlob(csvRows.join("\n"), "text/csv", fileName);
-    
-    UrlFetchApp.fetch(`https://storage.googleapis.com/upload/storage/v1/b/${BUCKET_NAME}/o?uploadType=media&name=${fileName}`, {
-      method: "POST",
-      contentType: "text/csv",
-      payload: blob.getBytes(),
-      headers: { Authorization: "Bearer " + ScriptApp.getOAuthToken() }
-    });
+    const blob = Utilities.newBlob(
+      textContent,
+      "text/plain",
+      fileName
+    );
+
+    UrlFetchApp.fetch(
+      `https://storage.googleapis.com/upload/storage/v1/b/${BUCKET_NAME}/o?uploadType=media&name=${fileName}`,
+      {
+        method: "POST",
+        contentType: "text/plain",
+        payload: blob.getBytes(),
+        headers: { Authorization: "Bearer " + ScriptApp.getOAuthToken() }
+      }
+    );
 
     triggerVertexAIImport(fileName);
+
   } catch (err) {
     Logger.log(`Sync Error: ${err}`);
   }
 }
 
 function triggerVertexAIImport(fileName) {
-  const url = `https://discoveryengine.googleapis.com/v1alpha/projects/${PROJECT_ID}/locations/global/collections/default_collection/dataStores/${DATA_STORE_ID}/branches/0/documents:import`;
-  
+  const url = `https://discoveryengine.googleapis.com/v1/projects/${PROJECT_ID}/locations/global/collections/default_collection/dataStores/${DATA_STORE_ID}/branches/0/documents:import`;
+
   const payload = {
-    "gcsSource": { 
-      "inputUris": [`gs://${BUCKET_NAME}/${fileName}`],
-      "dataSchema": "content-with-faq-csv" 
+    gcsSource: {
+      inputUris: [`gs://${BUCKET_NAME}/**`],
+      dataSchema: "content"
     },
-    "reconciliationMode": "FULL",
-    "autoGenerateIds": true
+    reconciliationMode: "INCREMENTAL"
   };
 
   UrlFetchApp.fetch(url, {
