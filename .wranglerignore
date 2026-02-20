@@ -2,9 +2,12 @@
 node_modules/
 package-lock.json
 
-# Git files
+# Git files - MUST EXCLUDE (causes "Asset too large" errors)
 .git/
+.git/**
 .gitignore
+.gitattributes
+.gitmodules
 
 # Development files
 *.log

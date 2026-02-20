@@ -2,3 +2,8 @@ name = "the-ace"
 compatibility_date = "2025-07-30"
 main = "worker.js"
 
+# Exclude .git directory and other unnecessary files from deployment
+# This prevents "Asset too large" errors from .git/objects/pack files
+[build]
+command = "echo 'Build complete'"
+

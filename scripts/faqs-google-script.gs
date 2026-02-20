@@ -54,11 +54,12 @@ function doGet(e) {
         };
       }
     }).filter(item => {
-      // Filter out empty rows
+      // Filter out empty rows - for FAQs, only require question (answer can be empty for unanswered questions)
       if (type === 'announcements') {
         return item.announcement && item.announcement.trim() !== '';
       } else {
-        return item.question && item.question.trim() !== '' && item.answer && item.answer.trim() !== '';
+        // Only require question to be non-empty (allows unanswered questions)
+        return item.question && item.question.trim() !== '';
       }
     });
     

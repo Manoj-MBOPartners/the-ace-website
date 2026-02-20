@@ -20,16 +20,28 @@ if (fs.existsSync(nodeModulesPath)) {
   }
 }
 
-// Deploy
+// Check if .git exists and warn
+const gitPath = path.join(__dirname, '.git');
+if (fs.existsSync(gitPath)) {
+  console.warn('⚠️  WARNING: .git directory detected!');
+  console.warn('   Make sure .wranglerignore includes .git/ to avoid "Asset too large" errors');
+  console.warn('   Consider using build-deploy.sh instead which explicitly excludes .git');
+}
+
+// Deploy (wrangler will use .wranglerignore to exclude .git)
 console.log('Deploying to Cloudflare...');
+console.log('Note: Ensure .wranglerignore properly excludes .git/ directory');
 try {
-  execSync('npx wrangler deploy --assets=. --compatibility-date 2025-07-30', {
+  // Don't use --assets=. as it may bypass .wranglerignore
+  // Instead, let wrangler auto-detect assets (it respects .wranglerignore)
+  execSync('npx wrangler deploy --compatibility-date 2025-07-30', {
     stdio: 'inherit',
     cwd: __dirname
   });
   console.log('✓ Deployment complete!');
 } catch (error) {
-  console.error('✗ Deployment failed');
+  console.error('✘ Deployment failed');
+  console.error('If you see "Asset too large" error, use build-deploy.sh instead');
   process.exit(1);
 }
 
