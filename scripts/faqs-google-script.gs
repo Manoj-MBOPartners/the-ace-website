@@ -8,9 +8,25 @@ const BUCKET_NAME = "tara_vault";
 const PROJECT_ID = "656911601245"; 
 const DATA_STORE_ID = "tara2";
 
+// Server-side cache duration (5 minutes = 300 seconds)
+const CACHE_DURATION_SECONDS = 300;
+
 function doGet(e) {
   try {
     const type = e.parameter.type || 'faqs';
+    const cacheKey = `data_${type}`;
+    
+    // Try to get from cache first for faster response
+    const cache = CacheService.getScriptCache();
+    const cachedData = cache.get(cacheKey);
+    
+    if (cachedData) {
+      Logger.log(`Returning cached data for ${type}`);
+      return createJsonResponse(JSON.parse(cachedData));
+    }
+    
+    // Cache miss - fetch from spreadsheet
+    Logger.log(`Cache miss for ${type}, fetching from spreadsheet`);
     const ss = SpreadsheetApp.openById(SHEET_ID);
     const sheet = (type === 'announcements') ? (ss.getSheets()[1] || ss.insertSheet('Sheet2')) : ss.getSheets()[0];
     
@@ -46,6 +62,14 @@ function doGet(e) {
       }
     });
     
+    // Cache the result for faster subsequent requests
+    try {
+      cache.put(cacheKey, JSON.stringify(items), CACHE_DURATION_SECONDS);
+      Logger.log(`Cached ${items.length} ${type} items`);
+    } catch (cacheErr) {
+      Logger.log(`Cache write error: ${cacheErr}`);
+    }
+    
     return createJsonResponse(items);
   } catch (err) {
     return createJsonResponse({ status: 'error', data: { error: err.toString() } });
@@ -71,6 +95,9 @@ function doPost(e) {
       default: throw new Error('Unknown action: ' + action);
     }
 
+    // Invalidate server-side cache after any data modification
+    invalidateCache(type);
+
     // --- ASYNC TRIGGER ---
     // Schedules the GCS push to happen 1 second after this response returns.
     // Store the type to sync in ScriptProperties so backgroundSync knows what to push.
@@ -92,6 +119,18 @@ function doPost(e) {
     return createJsonResponse({ status: 'success', message: `${type} updated. Syncing with TARA in background.` });
   } catch (err) {
     return createJsonResponse({ status: 'error', data: { error: err.toString() } });
+  }
+}
+
+// Invalidate server-side cache for a specific type
+function invalidateCache(type) {
+  try {
+    const cache = CacheService.getScriptCache();
+    const cacheKey = `data_${type}`;
+    cache.remove(cacheKey);
+    Logger.log(`Cache invalidated for ${type}`);
+  } catch (err) {
+    Logger.log(`Cache invalidation error: ${err}`);
   }
 }
 

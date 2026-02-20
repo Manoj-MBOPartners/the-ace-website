@@ -5,6 +5,61 @@ const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw81EIDpihUHq
 console.log('✅ FAQs script file loaded successfully');
 console.log('Script URL:', GOOGLE_SCRIPT_URL);
 
+// ===========================================
+// CACHING CONFIGURATION & HELPERS
+// ===========================================
+const FAQS_CACHE_KEY = 'faqs_cache';
+const ANNOUNCEMENTS_CACHE_KEY = 'announcements_cache';
+const CACHE_EXPIRY_MS = 5 * 60 * 1000; // 5 minutes
+
+// Get cached data from localStorage
+function getCachedData(cacheKey) {
+  try {
+    const cached = localStorage.getItem(cacheKey);
+    if (cached) {
+      const { data, timestamp } = JSON.parse(cached);
+      if (Date.now() - timestamp < CACHE_EXPIRY_MS) {
+        console.log(`Using cached data for ${cacheKey}`);
+        return data;
+      } else {
+        console.log(`Cache expired for ${cacheKey}`);
+        localStorage.removeItem(cacheKey);
+      }
+    }
+  } catch (e) {
+    console.warn('Cache read error:', e);
+  }
+  return null;
+}
+
+// Set cached data to localStorage
+function setCachedData(cacheKey, data) {
+  try {
+    localStorage.setItem(cacheKey, JSON.stringify({
+      data,
+      timestamp: Date.now()
+    }));
+    console.log(`Cached data for ${cacheKey}`);
+  } catch (e) {
+    console.warn('Cache write error:', e);
+  }
+}
+
+// Clear all FAQ/Announcement caches
+function clearAllCaches() {
+  try {
+    localStorage.removeItem(FAQS_CACHE_KEY);
+    localStorage.removeItem(ANNOUNCEMENTS_CACHE_KEY);
+    faqsLoaded = false;
+    announcementsLoaded = false;
+    console.log('All caches cleared');
+  } catch (e) {
+    console.warn('Cache clear error:', e);
+  }
+}
+
+// ===========================================
+
 // Format timestamp for display
 function formatTimestamp(timestamp) {
   if (!timestamp) return '';
@@ -87,11 +142,40 @@ if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', function() {
     console.log('DOMContentLoaded event fired');
     initializeFAQs();
+    // Preload FAQs in background for faster subsequent loads
+    preloadData();
   });
 } else {
   console.log('DOM already loaded, initializing immediately');
   // DOM is already loaded, initialize immediately
   initializeFAQs();
+  // Preload FAQs in background for faster subsequent loads
+  preloadData();
+}
+
+// Preload FAQs and Announcements in background
+function preloadData() {
+  // Only preload if not already loaded and not viewing a specific FAQ/view
+  const urlParams = new URLSearchParams(window.location.search);
+  const faqIdParam = urlParams.get('id');
+  const viewParam = urlParams.get('view');
+  
+  // If we have URL params, data will be loaded by those handlers
+  if (faqIdParam || viewParam) {
+    return;
+  }
+  
+  // Preload in background after a short delay
+  setTimeout(() => {
+    if (!faqsLoaded) {
+      console.log('Preloading FAQs in background...');
+      loadFAQs();
+    }
+    if (!announcementsLoaded) {
+      console.log('Preloading Announcements in background...');
+      loadAnnouncements();
+    }
+  }, 100);
 }
 
 // Show existing FAQs
@@ -527,8 +611,8 @@ function hideExistingFAQs() {
 }
 
 // Load FAQs from Google Script (only when needed)
-async function loadFAQs() {
-  console.log('loadFAQs() called');
+async function loadFAQs(forceRefresh = false) {
+  console.log('loadFAQs() called, forceRefresh:', forceRefresh);
   const itemsList = document.getElementById('itemsList');
   const messageContainer = document.getElementById('messageContainer');
   
@@ -542,6 +626,17 @@ async function loadFAQs() {
     return;
   }
   
+  // Try cache first (unless force refresh)
+  if (!forceRefresh) {
+    const cachedData = getCachedData(FAQS_CACHE_KEY);
+    if (cachedData) {
+      faqs = cachedData;
+      faqsLoaded = true;
+      console.log('Loaded FAQs from cache:', faqs.length, 'items');
+      return;
+    }
+  }
+  
   // Show loading message (only if itemsList is visible)
   if (itemsList.style.display !== 'none') {
     itemsList.innerHTML = '<div class="loading-message">Loading FAQs...</div>';
@@ -553,7 +648,6 @@ async function loadFAQs() {
     const response = await fetch(`${GOOGLE_SCRIPT_URL}?type=faqs`, {
       method: 'GET',
       mode: 'cors',
-      cache: 'no-store',
       headers: {
         'Accept': 'application/json'
       }
@@ -578,7 +672,8 @@ async function loadFAQs() {
       }));
       console.log('Processed FAQs:', faqs.length, 'items');
       faqsLoaded = true;
-      // Don't call displayFAQs here - will be called by displayCombinedItems
+      // Cache the data
+      setCachedData(FAQS_CACHE_KEY, faqs);
     } else if (responseData.status === 'success' && Array.isArray(responseData.data)) {
       faqs = responseData.data.map(faq => ({
         id: faq.id || `faq-${faq.row || faqs.length + 1}`,
@@ -589,33 +684,45 @@ async function loadFAQs() {
       }));
       console.log('Processed FAQs:', faqs.length, 'items');
       faqsLoaded = true;
-      // Don't call displayFAQs here - will be called by displayCombinedItems
+      // Cache the data
+      setCachedData(FAQS_CACHE_KEY, faqs);
     } else if (responseData.status === 'error') {
       throw new Error(responseData.data?.error || 'Error retrieving FAQs');
     } else {
       throw new Error('Invalid data format received from Google Script');
     }
-         } catch (error) {
-           console.error('Error loading FAQs:', error);
-           if (itemsList && itemsList.style.display !== 'none') {
-             itemsList.innerHTML = `
-               <div class="error-message">
-                 Error loading FAQs: ${error.message}. Please check the browser console for more details.
-               </div>
-             `;
-           }
-         }
-       }
+  } catch (error) {
+    console.error('Error loading FAQs:', error);
+    if (itemsList && itemsList.style.display !== 'none') {
+      itemsList.innerHTML = `
+        <div class="error-message">
+          Error loading FAQs: ${error.message}. Please check the browser console for more details.
+        </div>
+      `;
+    }
+  }
+}
 
 // Load Announcements from Google Script (only when needed)
-async function loadAnnouncements() {
-  console.log('loadAnnouncements() called');
+async function loadAnnouncements(forceRefresh = false) {
+  console.log('loadAnnouncements() called, forceRefresh:', forceRefresh);
   const itemsList = document.getElementById('itemsList');
   const messageContainer = document.getElementById('messageContainer');
   
   if (!itemsList) {
     console.error('itemsList element not found!');
     return;
+  }
+  
+  // Try cache first (unless force refresh)
+  if (!forceRefresh) {
+    const cachedData = getCachedData(ANNOUNCEMENTS_CACHE_KEY);
+    if (cachedData) {
+      announcements = cachedData;
+      announcementsLoaded = true;
+      console.log('Loaded Announcements from cache:', announcements.length, 'items');
+      return;
+    }
   }
   
   // Show loading message (only if itemsList is visible)
@@ -631,7 +738,6 @@ async function loadAnnouncements() {
     const response = await fetch(`${GOOGLE_SCRIPT_URL}?type=announcements`, {
       method: 'GET',
       mode: 'cors',
-      cache: 'no-store',
       headers: {
         'Accept': 'application/json'
       }
@@ -655,7 +761,8 @@ async function loadAnnouncements() {
       }));
       console.log('Processed Announcements:', announcements.length, 'items');
       announcementsLoaded = true;
-      // Don't call displayAnnouncements here - will be called by displayCombinedItems
+      // Cache the data
+      setCachedData(ANNOUNCEMENTS_CACHE_KEY, announcements);
     } else if (responseData.status === 'success' && Array.isArray(responseData.data)) {
       announcements = responseData.data.map(ann => ({
         id: ann.id || `announcement-${ann.row || announcements.length + 1}`,
@@ -665,7 +772,8 @@ async function loadAnnouncements() {
       }));
       console.log('Processed Announcements:', announcements.length, 'items');
       announcementsLoaded = true;
-      // Don't call displayAnnouncements here - will be called by displayCombinedItems
+      // Cache the data
+      setCachedData(ANNOUNCEMENTS_CACHE_KEY, announcements);
     } else if (responseData.status === 'error') {
       throw new Error(responseData.data?.error || 'Error retrieving Announcements');
     } else {
@@ -1248,8 +1356,10 @@ async function deleteAnnouncement(id) {
     
     showMessage('Announcement deleted successfully', 'success');
     
-    // Reload announcements and refresh the display
-    await loadAnnouncements();
+    // Clear cache and reload announcements
+    localStorage.removeItem(ANNOUNCEMENTS_CACHE_KEY);
+    announcementsLoaded = false;
+    await loadAnnouncements(true);
     
     // Refresh the display based on current view mode
     if (displayMode === 'announcements') {
@@ -1542,6 +1652,16 @@ async function handleInlineSubmit(event) {
       'success'
     );
     
+    // Clear caches to ensure fresh data on next load
+    if (faqData.length > 0) {
+      localStorage.removeItem(FAQS_CACHE_KEY);
+      faqsLoaded = false;
+    }
+    if (announcementData.length > 0) {
+      localStorage.removeItem(ANNOUNCEMENTS_CACHE_KEY);
+      announcementsLoaded = false;
+    }
+    
     // Clear the form
     document.getElementById('inlineQAContainer').innerHTML = '';
     inlineQAPairCounter = 0;
@@ -1687,6 +1807,10 @@ async function handleInlineAnnouncementSubmit(event) {
       'success'
     );
     
+    // Clear cache
+    localStorage.removeItem(ANNOUNCEMENTS_CACHE_KEY);
+    announcementsLoaded = false;
+    
     // Clear the form
     document.getElementById('inlineAnnouncementContainer').innerHTML = '';
     inlineAnnouncementCounter = 0;
@@ -1815,8 +1939,12 @@ async function handleAnnouncementSubmit(event) {
       'success'
     );
     
+    // Clear cache
+    localStorage.removeItem(ANNOUNCEMENTS_CACHE_KEY);
+    announcementsLoaded = false;
+    
     closeAnnouncementModal();
-    await loadAnnouncements();
+    await loadAnnouncements(true);
   } catch (error) {
     console.error('Error saving announcement:', error);
     showMessage(`Error saving announcement: ${error.message}`, 'error');
@@ -1924,6 +2052,11 @@ async function saveInlineFAQ(id) {
     faq.question = question;
     faq.answer = answer;
     
+    // Clear cache since data was updated
+    localStorage.removeItem(FAQS_CACHE_KEY);
+    // Update local cache with new data
+    setCachedData(FAQS_CACHE_KEY, faqs);
+    
     // Cancel editing
     editingId = null;
     
@@ -1933,7 +2066,7 @@ async function saveInlineFAQ(id) {
     
     if (faqIdParam === id) {
       // Single FAQ view - reload to show updated FAQ
-      await loadFAQs();
+      await loadFAQs(true);
       displayFAQs(faqIdParam);
     } else if (displayMode === 'unanswered') {
       // Refresh unanswered view (the answered question will disappear from the list)
@@ -2045,6 +2178,11 @@ async function saveInlineAnnouncement(id) {
     
     // Update local data
     ann.announcement = announcement;
+    
+    // Clear cache since data was updated
+    localStorage.removeItem(ANNOUNCEMENTS_CACHE_KEY);
+    // Update local cache with new data
+    setCachedData(ANNOUNCEMENTS_CACHE_KEY, announcements);
     
     // Cancel editing
     editingAnnouncementId = null;
@@ -2172,6 +2310,10 @@ async function deleteFAQ(id) {
     
     showMessage('FAQ deleted successfully', 'success');
     
+    // Clear cache
+    localStorage.removeItem(FAQS_CACHE_KEY);
+    faqsLoaded = false;
+    
     // If we're in single FAQ view and deleted that FAQ, redirect to all FAQs
     const urlParams = new URLSearchParams(window.location.search);
     const currentFaqId = urlParams.get('id');
@@ -2182,7 +2324,7 @@ async function deleteFAQ(id) {
       }, 1500);
     } else {
       // Reload FAQs and refresh the display
-      await loadFAQs();
+      await loadFAQs(true);
       
       // Refresh the display based on current view mode
       if (displayMode === 'faqs') {
@@ -2294,6 +2436,10 @@ async function handleSubmit(event) {
       'success'
     );
     
+    // Clear cache
+    localStorage.removeItem(FAQS_CACHE_KEY);
+    faqsLoaded = false;
+    
     closeModal();
     
     // If we're editing in single FAQ view, preserve the query parameter
@@ -2301,13 +2447,13 @@ async function handleSubmit(event) {
     const currentFaqId = urlParams.get('id');
     if (editingId && currentFaqId === editingId) {
       // Stay in single FAQ view after editing
-      loadFAQs();
+      loadFAQs(true);
     } else if (editingId && currentFaqId) {
       // If editing a different FAQ while viewing another, redirect to the edited FAQ
       window.location.href = `${window.location.pathname}?id=${editingId}`;
     } else {
       // Normal reload
-      loadFAQs();
+      loadFAQs(true);
     }
   } catch (error) {
     console.error('Error saving FAQ:', error);
@@ -2540,3 +2686,4 @@ window.showExistingAnnouncements = showExistingAnnouncements;
 window.hideExistingAnnouncements = hideExistingAnnouncements;
 window.handleAnnouncementSubmit = handleAnnouncementSubmit;
 window.closeAnnouncementModal = closeAnnouncementModal;
+window.clearAllCaches = clearAllCaches;
