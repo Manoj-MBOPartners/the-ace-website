@@ -44,7 +44,7 @@ let faqsLoaded = false; // Track if FAQs have been loaded
 let announcementsLoaded = false; // Track if announcements have been loaded
 let existingFAQsShown = false; // Track if existing FAQs are displayed
 let existingAnnouncementsShown = false; // Track if announcements are displayed
-let displayMode = 'none'; // 'faqs', 'announcements', 'both', or 'none'
+let displayMode = 'none'; // 'faqs', 'announcements', 'both', 'unanswered', or 'none'
 let searchQuery = ''; // Track current search query
 
 // Initialize immediately when script loads
@@ -64,13 +64,17 @@ function initializeFAQs() {
   
   console.log('Form elements found, initializing inline form');
   
-  // Handle query parameter for specific question if present
+  // Handle query parameters for specific question or view
   const urlParams = new URLSearchParams(window.location.search);
   const faqIdParam = urlParams.get('id');
+  const viewParam = urlParams.get('view');
   
   if (faqIdParam) {
-    // If query parameter exists, show that FAQ (will load FAQs automatically)
+    // If FAQ id parameter exists, show that FAQ (will load FAQs automatically)
     showExistingItems();
+  } else if (viewParam === 'unanswered') {
+    // If view=unanswered parameter exists, show unanswered questions
+    showUnansweredQuestions();
   } else {
     // Initialize with one Q&A pair for adding new FAQs/Announcements
     addInlineQAPair();
@@ -144,6 +148,20 @@ async function showExistingFAQsOnly() {
     showAnnouncementsButton.setAttribute('onclick', 'showExistingAnnouncementsOnly()');
   }
   
+  // Reset unanswered button
+  const showUnansweredButton = document.getElementById('showUnansweredButton');
+  if (showUnansweredButton) {
+    showUnansweredButton.textContent = 'Show Unanswered Questions';
+    showUnansweredButton.classList.add('secondary');
+  }
+  
+  // Clean up URL view parameter
+  const url = new URL(window.location);
+  if (url.searchParams.has('view')) {
+    url.searchParams.delete('view');
+    window.history.replaceState({}, '', url);
+  }
+  
   // Handle query parameter for single FAQ view
   const urlParams = new URLSearchParams(window.location.search);
   const faqIdParam = urlParams.get('id');
@@ -204,11 +222,192 @@ async function showExistingAnnouncementsOnly() {
     showFAQsButton.textContent = 'Show Existing FAQs';
     showFAQsButton.setAttribute('onclick', 'showExistingFAQsOnly()');
   }
+  
+  // Reset unanswered button
+  const showUnansweredButton = document.getElementById('showUnansweredButton');
+  if (showUnansweredButton) {
+    showUnansweredButton.textContent = 'Show Unanswered Questions';
+    showUnansweredButton.classList.add('secondary');
+  }
+  
+  // Clean up URL view parameter
+  const url = new URL(window.location);
+  if (url.searchParams.has('view')) {
+    url.searchParams.delete('view');
+    window.history.replaceState({}, '', url);
+  }
 }
 
 // Show existing FAQs (kept for backward compatibility)
 async function showExistingFAQs() {
   await showExistingFAQsOnly();
+}
+
+// Show unanswered questions only
+async function showUnansweredQuestions() {
+  const itemsList = document.getElementById('itemsList');
+  const addForm = document.getElementById('addForm');
+  
+  if (!itemsList) {
+    console.error('itemsList element not found!');
+    return;
+  }
+  
+  // Toggle behavior - if unanswered questions are already shown, hide them
+  if (displayMode === 'unanswered' && itemsList.style.display !== 'none') {
+    hideExistingItems();
+    // Remove the view parameter from URL
+    const url = new URL(window.location);
+    url.searchParams.delete('view');
+    window.history.replaceState({}, '', url);
+    return;
+  }
+  
+  // Hide the add form
+  if (addForm) {
+    addForm.style.display = 'none';
+  }
+  
+  // Show the items list
+  itemsList.style.display = 'block';
+  
+  // Show search container
+  const searchContainer = document.getElementById('searchContainer');
+  if (searchContainer) {
+    searchContainer.style.display = 'block';
+  }
+  
+  // Load FAQs if not already loaded
+  if (!faqsLoaded) {
+    await loadFAQs();
+  }
+  
+  // Display unanswered questions only
+  displayMode = 'unanswered';
+  displayUnansweredOnly();
+  
+  // Update URL to make it shareable
+  const url = new URL(window.location);
+  url.searchParams.set('view', 'unanswered');
+  url.searchParams.delete('id'); // Remove any FAQ id parameter
+  window.history.replaceState({}, '', url);
+  
+  // Update button texts
+  const showUnansweredButton = document.getElementById('showUnansweredButton');
+  if (showUnansweredButton) {
+    showUnansweredButton.textContent = 'Hide Unanswered Questions';
+    showUnansweredButton.classList.remove('secondary');
+  }
+  
+  // Reset other buttons
+  const showFAQsButton = document.getElementById('showFAQsButton');
+  if (showFAQsButton) {
+    showFAQsButton.textContent = 'Show Existing FAQs';
+    showFAQsButton.setAttribute('onclick', 'showExistingFAQsOnly()');
+  }
+  
+  const showAnnouncementsButton = document.getElementById('showAnnouncementsButton');
+  if (showAnnouncementsButton) {
+    showAnnouncementsButton.textContent = 'Show Existing Announcements';
+    showAnnouncementsButton.setAttribute('onclick', 'showExistingAnnouncementsOnly()');
+  }
+}
+
+// Display unanswered questions only (FAQs with empty answers)
+function displayUnansweredOnly() {
+  const itemsList = document.getElementById('itemsList');
+  if (!itemsList) {
+    console.error('itemsList element not found!');
+    return;
+  }
+  
+  // Filter FAQs that have questions but no answers (or empty answers)
+  let unansweredFAQs = faqs.filter(faq => {
+    const question = (faq.question || '').trim();
+    const answer = (faq.answer || '').trim();
+    return question !== '' && answer === '';
+  });
+  
+  // Apply search filter if present
+  if (searchQuery.trim()) {
+    const query = searchQuery.toLowerCase().trim();
+    unansweredFAQs = unansweredFAQs.filter(faq => {
+      const question = (faq.question || '').toLowerCase();
+      return question.includes(query);
+    });
+  }
+  
+  // Sort by timestamp (newest first) if available
+  const sortedFAQs = [...unansweredFAQs].sort((a, b) => {
+    if (!a.timestamp && !b.timestamp) return 0;
+    if (!a.timestamp) return 1;
+    if (!b.timestamp) return -1;
+    return new Date(b.timestamp) - new Date(a.timestamp);
+  });
+  
+  if (sortedFAQs.length === 0) {
+    if (searchQuery.trim()) {
+      itemsList.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-state-icon">🔍</div>
+          <div class="empty-state-text">No unanswered questions found matching "${escapeHtml(searchQuery)}"</div>
+        </div>
+      `;
+    } else {
+      itemsList.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-state-icon">✅</div>
+          <div class="empty-state-text">All questions have been answered! No unanswered questions found.</div>
+        </div>
+      `;
+    }
+    return;
+  }
+  
+  // Display count of unanswered questions
+  const countMessage = `<div class="loading-message" style="background: #fff3e0; color: #e65100; margin-bottom: 20px;">
+    <span style="margin-right: 8px;">⚠️</span> ${sortedFAQs.length} unanswered question${sortedFAQs.length > 1 ? 's' : ''} found
+  </div>`;
+  
+  itemsList.innerHTML = countMessage + sortedFAQs.map(faq => {
+    const faqId = faq.id;
+    const isEditing = editingId === faqId;
+    return `
+      <div class="faq-item ${isEditing ? 'expanded' : ''}" id="faq-${faqId}" style="border-left: 4px solid #ff9800;">
+        <div class="faq-question" ${!isEditing ? `onclick="toggleFAQ('${faqId}')" style="cursor: pointer;"` : ''}>
+          ${isEditing 
+            ? `<input type="text" class="faq-question-editable" id="edit-question-${faqId}" value="${escapeHtml(faq.question || '')}" />`
+            : `<span class="faq-question-link">${escapeHtml(faq.question || '')}</span>`
+          }
+        </div>
+        <div class="faq-answer" style="color: #ff9800; font-style: italic;">
+          ${isEditing
+            ? `<textarea class="faq-answer-editable" id="edit-answer-${faqId}" placeholder="Enter the answer...">${escapeHtml(faq.answer || '')}</textarea>`
+            : '<em>⚠️ No answer provided yet</em>'
+          }
+        </div>
+        <div class="faq-actions">
+          ${isEditing
+            ? `<div class="inline-edit-actions">
+                <button class="inline-save-button" onclick="saveInlineFAQ('${faqId}')">Save</button>
+                <button class="inline-cancel-button" onclick="cancelInlineEdit('${faqId}')">Cancel</button>
+              </div>`
+            : `<button class="faq-action-button" onclick="event.stopPropagation(); editFAQ('${faqId}')" style="background: #ff9800; color: white; border-color: #ff9800;">Add Answer</button>
+               <button class="faq-action-button delete" onclick="event.stopPropagation(); deleteFAQ('${faqId}')">Delete</button>
+               <button class="share-link-button" onclick="event.stopPropagation(); copyShareLink('${faqId}')">Copy Link</button>`
+          }
+        </div>
+      </div>
+    `;
+  }).join('');
+  
+  // Focus on editable field if editing
+  if (editingId) {
+    const editAnswer = document.getElementById(`edit-answer-${editingId}`);
+    if (editAnswer) {
+      setTimeout(() => editAnswer.focus(), 100);
+    }
+  }
 }
 
 // Show existing items (kept for backward compatibility - shows both)
@@ -296,6 +495,7 @@ function hideExistingItems() {
   // Reset button texts
   const showFAQsButton = document.getElementById('showFAQsButton');
   const showAnnouncementsButton = document.getElementById('showAnnouncementsButton');
+  const showUnansweredButton = document.getElementById('showUnansweredButton');
   if (showFAQsButton) {
     showFAQsButton.textContent = 'Show Existing FAQs';
     showFAQsButton.setAttribute('onclick', 'showExistingFAQsOnly()');
@@ -303,6 +503,17 @@ function hideExistingItems() {
   if (showAnnouncementsButton) {
     showAnnouncementsButton.textContent = 'Show Existing Announcements';
     showAnnouncementsButton.setAttribute('onclick', 'showExistingAnnouncementsOnly()');
+  }
+  if (showUnansweredButton) {
+    showUnansweredButton.textContent = 'Show Unanswered Questions';
+    showUnansweredButton.classList.add('secondary');
+  }
+  
+  // Clean up URL parameters
+  const url = new URL(window.location);
+  url.searchParams.delete('view');
+  if (url.search !== window.location.search) {
+    window.history.replaceState({}, '', url);
   }
   
   displayMode = 'none';
@@ -1724,6 +1935,9 @@ async function saveInlineFAQ(id) {
       // Single FAQ view - reload to show updated FAQ
       await loadFAQs();
       displayFAQs(faqIdParam);
+    } else if (displayMode === 'unanswered') {
+      // Refresh unanswered view (the answered question will disappear from the list)
+      displayUnansweredOnly();
     } else if (displayMode === 'faqs' || displayMode === 'both') {
       displayFAQsOnly();
     } else {
@@ -1758,6 +1972,8 @@ function cancelInlineEdit(id) {
   if (faqIdParam === id) {
     // Single FAQ view
     displayFAQs(faqIdParam);
+  } else if (displayMode === 'unanswered') {
+    displayUnansweredOnly();
   } else if (displayMode === 'faqs' || displayMode === 'both') {
     displayFAQsOnly();
   } else {
@@ -1894,6 +2110,8 @@ function editFAQ(id) {
   if (faqIdParam === id) {
     // Single FAQ view
     displayFAQs(faqIdParam);
+  } else if (displayMode === 'unanswered') {
+    displayUnansweredOnly();
   } else if (displayMode === 'faqs' || displayMode === 'both') {
     displayFAQsOnly();
   } else if (displayMode === 'announcements') {
@@ -1973,6 +2191,8 @@ async function deleteFAQ(id) {
         displayAnnouncementsOnly();
       } else if (displayMode === 'both') {
         displayCombinedItems();
+      } else if (displayMode === 'unanswered') {
+        displayUnansweredOnly();
       } else {
         // If not in any display mode, show FAQs only
         displayFAQsOnly();
@@ -2196,13 +2416,13 @@ function handleSearch(event) {
     clearButton.style.display = searchQuery.trim() ? 'block' : 'none';
   }
   
-  // Re-display FAQs with search filter
-  if (displayMode === 'faqs' || displayMode === 'both') {
-    if (displayMode === 'faqs') {
-      displayFAQsOnly();
-    } else {
-      displayCombinedItems();
-    }
+  // Re-display items with search filter based on current mode
+  if (displayMode === 'faqs') {
+    displayFAQsOnly();
+  } else if (displayMode === 'both') {
+    displayCombinedItems();
+  } else if (displayMode === 'unanswered') {
+    displayUnansweredOnly();
   }
 }
 
@@ -2218,13 +2438,13 @@ function clearSearch() {
     clearButton.style.display = 'none';
   }
   
-  // Re-display FAQs without search filter
-  if (displayMode === 'faqs' || displayMode === 'both') {
-    if (displayMode === 'faqs') {
-      displayFAQsOnly();
-    } else {
-      displayCombinedItems();
-    }
+  // Re-display items without search filter based on current mode
+  if (displayMode === 'faqs') {
+    displayFAQsOnly();
+  } else if (displayMode === 'both') {
+    displayCombinedItems();
+  } else if (displayMode === 'unanswered') {
+    displayUnansweredOnly();
   }
 }
 
@@ -2256,8 +2476,18 @@ function handleQueryParameter() {
 
 // Handle popstate for browser back/forward navigation
 window.addEventListener('popstate', function() {
-  // Reload FAQs when navigating back/forward to handle query parameter changes
-  loadFAQs();
+  const urlParams = new URLSearchParams(window.location.search);
+  const viewParam = urlParams.get('view');
+  const faqIdParam = urlParams.get('id');
+  
+  if (viewParam === 'unanswered') {
+    showUnansweredQuestions();
+  } else if (faqIdParam) {
+    showExistingItems();
+  } else {
+    // If no special view, hide existing items and show add form
+    hideExistingItems();
+  }
 });
 
 // Make all functions globally accessible for inline onclick handlers
@@ -2290,6 +2520,8 @@ window.showExistingItems = showExistingItems;
 window.hideExistingItems = hideExistingItems;
 window.showExistingFAQsOnly = showExistingFAQsOnly;
 window.showExistingAnnouncementsOnly = showExistingAnnouncementsOnly;
+window.showUnansweredQuestions = showUnansweredQuestions;
+window.displayUnansweredOnly = displayUnansweredOnly;
 window.displayCombinedItems = displayCombinedItems;
 window.displayFAQsOnly = displayFAQsOnly;
 window.displayAnnouncementsOnly = displayAnnouncementsOnly;

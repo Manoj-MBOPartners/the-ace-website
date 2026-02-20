@@ -73,7 +73,17 @@ function doPost(e) {
 
     // --- ASYNC TRIGGER ---
     // Schedules the GCS push to happen 1 second after this response returns.
-    // We pass 'faqs' or 'announcements' via a temporary property or just sync both.
+    // Store the type to sync in ScriptProperties so backgroundSync knows what to push.
+    const props = PropertiesService.getScriptProperties();
+    const pendingSync = props.getProperty('pendingSync');
+    
+    // If there's already a pending sync for the other type, sync both
+    if (pendingSync && pendingSync !== type) {
+      props.setProperty('pendingSync', 'both');
+    } else {
+      props.setProperty('pendingSync', type);
+    }
+    
     ScriptApp.newTrigger('backgroundSync')
              .timeBased()
              .after(1000)
@@ -87,7 +97,7 @@ function doPost(e) {
 
 /**
  * Background Wrapper
- * Triggered functions cannot take arguments, so we call our sync here.
+ * Triggered functions cannot take arguments, so we read from ScriptProperties.
  */
 function backgroundSync() {
   // Clean up the trigger so it doesn't run again
@@ -98,9 +108,20 @@ function backgroundSync() {
     }
   }
   
-  // Sync both to be safe, or you could store the 'type' in ScriptProperties
-  pushFileToGCS('faqs');
-  pushFileToGCS('announcements');
+  // Read which type needs syncing from ScriptProperties
+  const props = PropertiesService.getScriptProperties();
+  const pendingSync = props.getProperty('pendingSync');
+  props.deleteProperty('pendingSync'); // Clear after reading
+  
+  // Only sync the type that was updated
+  if (pendingSync === 'both') {
+    pushFileToGCS('faqs');
+    pushFileToGCS('announcements');
+  } else if (pendingSync === 'announcements') {
+    pushFileToGCS('announcements');
+  } else if (pendingSync === 'faqs') {
+    pushFileToGCS('faqs');
+  }
 }
 
 // --- CRUD Handlers (Updated to remove direct sync) ---
