@@ -170,6 +170,15 @@
         border-radius: 4px;
       }
       
+      .results-section-box {
+        background-color: #ffffff;
+        border: 1px solid #c0d4e4;
+        border-radius: 6px;
+        padding: 16px 18px;
+        margin-top: 18px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+      }
+      
       .results-title {
         font-size: 18px;
         font-weight: 600;
@@ -411,40 +420,112 @@
         </form>
         
         <div id="results" class="results-container" style="display: none;">
-          <div class="results-title">Calculation Results</div>
-          <div class="result-item">
-            <span class="result-label">Handover Date (DD-MM-YYYY):</span>
-            <span class="result-value" id="handoverDateResult">-</span>
+          <div class="results-section-box">
+            <div class="results-title">Maintenance calculation (Rs. 4.5 × SqFt, GST 18% if &gt; Rs. 7,500/month)</div>
+            <div id="finalCalculationContainer">
+              <div class="result-item">
+                <span class="result-label">Handover Date (DD-MM-YYYY):</span>
+                <span class="result-value" id="handoverDateResultFinal">-</span>
+              </div>
+              <div class="result-item">
+                <span class="result-label">Square Feet (Sq Ft):</span>
+                <span class="result-value" id="sqftResultFinal">-</span>
+              </div>
+              <div class="result-item">
+                <span class="result-label">Total Number of days:</span>
+                <span class="result-value" id="daysResultFinal">-</span>
+              </div>
+              <div class="result-item">
+                <span class="result-label">Months:</span>
+                <span class="result-value" id="monthsResultFinal">-</span>
+              </div>
+              <div class="result-item">
+                <span class="result-label">Days (remaining):</span>
+                <span class="result-value" id="remainingDaysResultFinal">-</span>
+              </div>
+              <div class="result-item">
+                <span class="result-label" id="finalPartialLabel">Partial month (X days):</span>
+                <span class="result-value" id="finalPartialSubtotal">-</span>
+              </div>
+              <div class="result-item">
+                <span class="result-label" id="finalFullMonthsLabel">Full months (N):</span>
+                <span class="result-value" id="finalFullMonthsSubtotal">-</span>
+              </div>
+              <div class="result-item">
+                <span class="result-label">Final total (Rs.):</span>
+                <span class="result-value" id="finalGrandTotalResult">-</span>
+              </div>
+              <div class="result-item">
+                <span class="result-label">Final round off (Rs.):</span>
+                <span class="result-value" id="finalRoundOffResult">-</span>
+              </div>
+              <div class="result-item">
+                <span class="result-label">Final payable (rounded) (Rs.4.5/sqft):</span>
+                <span class="result-value" id="finalPayableResult">-</span>
+              </div>
+            </div>
           </div>
-          <div class="result-item">
-            <span class="result-label">Square Feet (Sq Ft):</span>
-            <span class="result-value" id="sqftResult">-</span>
+
+          <div class="results-section-box">
+            <div class="results-title">Invoice 1 (Invoiced - Rs.4/sqft):</div>
+            <div class="result-item">
+              <span class="result-label">Handover Date (DD-MM-YYYY):</span>
+              <span class="result-value" id="handoverDateResult">-</span>
+            </div>
+            <div class="result-item">
+              <span class="result-label">Square Feet (Sq Ft):</span>
+              <span class="result-value" id="sqftResult">-</span>
+            </div>
+            <div class="result-item">
+              <span class="result-label">Total Number of days:</span>
+              <span class="result-value" id="daysResult">-</span>
+            </div>
+            <div class="result-item">
+              <span class="result-label">Months:</span>
+              <span class="result-value" id="monthsResult">-</span>
+            </div>
+            <div class="result-item">
+              <span class="result-label">Days (remaining):</span>
+              <span class="result-value" id="remainingDaysResult">-</span>
+            </div>
+            <div class="result-item">
+              <!-- This label is dynamically updated by JavaScript to show actual day count -->
+              <span class="result-label" id="maintenanceDaysLabel">Maintenance for Days (Rs. 4 × SqFt × Days × 12/365):</span>
+              <span class="result-value" id="maintenanceDaysResult">-</span>
+            </div>
+            <div class="result-item">
+              <!-- This label is dynamically updated by JavaScript to show actual month count -->
+              <span class="result-label" id="maintenanceMonthsLabel">Maintenance for Months (Rs. 4 × SqFt × Months):</span>
+              <span class="result-value" id="maintenanceMonthsResult">-</span>
+            </div>
+            <div class="result-item">
+              <span class="result-label">Total Maintenance Amount (Rs.):</span>
+              <span class="result-value" id="totalResult">-</span>
+            </div>
           </div>
-          <div class="result-item">
-            <span class="result-label">Total Number of days:</span>
-            <span class="result-value" id="daysResult">-</span>
-          </div>
-          <div class="result-item">
-            <span class="result-label">Months:</span>
-            <span class="result-value" id="monthsResult">-</span>
-          </div>
-          <div class="result-item">
-            <span class="result-label">Days (remaining):</span>
-            <span class="result-value" id="remainingDaysResult">-</span>
-          </div>
-          <div class="result-item">
-            <!-- This label is dynamically updated by JavaScript to show actual day count -->
-            <span class="result-label" id="maintenanceDaysLabel">Maintenance for Days (Rs. 4 × SqFt × Days × 12/365):</span>
-            <span class="result-value" id="maintenanceDaysResult">-</span>
-          </div>
-          <div class="result-item">
-            <!-- This label is dynamically updated by JavaScript to show actual month count -->
-            <span class="result-label" id="maintenanceMonthsLabel">Maintenance for Months (Rs. 4 × SqFt × Months):</span>
-            <span class="result-value" id="maintenanceMonthsResult">-</span>
-          </div>
-          <div class="result-item">
-            <span class="result-label">Total Maintenance Amount (Rs.):</span>
-            <span class="result-value" id="totalResult">-</span>
+
+          <div class="results-section-box">
+            <div class="results-title">Invoice 2 (Invoiced)</div>
+            <div class="result-item">
+              <span class="result-label">Maintenance payable (Rs.4.5/sqft):</span>
+              <span class="result-value" id="invoice2MaintPayableBaseResult">-</span>
+            </div>
+            <div class="result-item">
+              <span class="result-label">Invoice 1 payable (Rs.4/sqft):</span>
+              <span class="result-value" id="invoice1PayableBaseResult">-</span>
+            </div>
+            <div class="result-item">
+              <span class="result-label">Invoice 2 (Maintenance payable − Invoice 1 payable) (Rs.):</span>
+              <span class="result-value" id="invoice2InvoicedTotalResult">-</span>
+            </div>
+            <div class="result-item">
+              <span class="result-label">Invoice 2 Round off (Rs.):</span>
+              <span class="result-value" id="invoice2InvoicedRoundOffResult">-</span>
+            </div>
+            <div class="result-item">
+              <span class="result-label">Invoice 2 total:</span>
+              <span class="result-value" id="invoice2InvoicedPayableResult">-</span>
+            </div>
           </div>
         </div>
       </div>

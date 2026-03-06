@@ -64,9 +64,18 @@ function doGet(e) {
     });
     
     // Cache the result for faster subsequent requests
+    // Note: Google Apps Script CacheService has a 100 KB limit per value
     try {
-      cache.put(cacheKey, JSON.stringify(items), CACHE_DURATION_SECONDS);
-      Logger.log(`Cached ${items.length} ${type} items`);
+      const jsonData = JSON.stringify(items);
+      const dataSize = Utilities.newBlob(jsonData).getBytes().length;
+      const maxCacheSize = 100 * 1024; // 100 KB limit
+      
+      if (dataSize > maxCacheSize) {
+        Logger.log(`Skipping cache for ${type}: data size (${Math.round(dataSize/1024)} KB) exceeds 100 KB limit`);
+      } else {
+        cache.put(cacheKey, jsonData, CACHE_DURATION_SECONDS);
+        Logger.log(`Cached ${items.length} ${type} items (${Math.round(dataSize/1024)} KB)`);
+      }
     } catch (cacheErr) {
       Logger.log(`Cache write error: ${cacheErr}`);
     }

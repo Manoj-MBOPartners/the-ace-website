@@ -191,6 +191,12 @@ document.getElementById('calculatorForm').addEventListener('submit', function(e)
   
   const block = blockInput.value.trim().toUpperCase();
   const doorNumber = document.getElementById('doorNumber').value.trim();
+
+  const INVOICE1_RATE = 4;
+  const INVOICE2_RATE = 0.5;
+  const FINAL_RATE = 4.5;
+  const GST_RATE = 0.18;
+  const GST_THRESHOLD_MONTHLY = 7500;
   
   // Get flat data from master data
   const flatData = findFlatData(block, doorNumber);
@@ -246,7 +252,7 @@ document.getElementById('calculatorForm').addEventListener('submit', function(e)
   
   // Update the Days label - replace static "Days" with actual number
   if (maintenanceDaysLabelEl) {
-    const newLabelText = `Maintenance for ${displayDaysNum} days (Rs. 4 × SqFt × Days × 12/365):`;
+    const newLabelText = `Maintenance for ${displayDaysNum} days (Rs. ${INVOICE1_RATE} × SqFt × Days × 12/365):`;
     maintenanceDaysLabelEl.innerHTML = newLabelText;
     console.log('✓ Days label updated:', maintenanceDaysLabelEl.textContent);
   } else {
@@ -255,7 +261,7 @@ document.getElementById('calculatorForm').addEventListener('submit', function(e)
   
   // Update the Months label - replace static "Months" with actual number
   if (maintenanceMonthsLabelEl) {
-    const newLabelText = `Maintenance for ${displayMonthsNum} Months (Rs. 4 × SqFt × Months):`;
+    const newLabelText = `Maintenance for ${displayMonthsNum} Months (Rs. ${INVOICE1_RATE} × SqFt × Months):`;
     maintenanceMonthsLabelEl.innerHTML = newLabelText;
     console.log('✓ Months label updated:', maintenanceMonthsLabelEl.textContent);
   } else {
@@ -285,6 +291,28 @@ document.getElementById('calculatorForm').addEventListener('submit', function(e)
   document.getElementById('daysResult').textContent = totalDays + ' days';
   document.getElementById('monthsResult').textContent = monthsNum + ' months';
   document.getElementById('remainingDaysResult').textContent = daysNum + ' days';
+
+  // Mirror base details into Maintenance calculation + Invoice 2 sections
+  const mirrorIds = [
+    ['handoverDateResult', 'handoverDateResultFinal'],
+    ['sqftResult', 'sqftResultFinal'],
+    ['daysResult', 'daysResultFinal'],
+    ['monthsResult', 'monthsResultFinal'],
+    ['remainingDaysResult', 'remainingDaysResultFinal'],
+    ['handoverDateResult', 'handoverDateResultInvoice2'],
+    ['sqftResult', 'sqftResultInvoice2'],
+    ['daysResult', 'daysResultInvoice2'],
+    ['monthsResult', 'monthsResultInvoice2'],
+    ['remainingDaysResult', 'remainingDaysResultInvoice2'],
+  ];
+
+  mirrorIds.forEach(([sourceId, targetId]) => {
+    const sourceEl = document.getElementById(sourceId);
+    const targetEl = document.getElementById(targetId);
+    if (sourceEl && targetEl) {
+      targetEl.textContent = sourceEl.textContent;
+    }
+  });
   
   // Calculate maintenance for days and months using the formula
   const sqft = parseFloat(storedSqft) || 0;
@@ -292,11 +320,11 @@ document.getElementById('calculatorForm').addEventListener('submit', function(e)
   let maintenanceForMonths = 0;
   
   if (sqft > 0 && daysNum > 0 && monthsNum >= 0) {
-    // Maintenance for days: 4 × SqFt × number of days × 12/365
-    maintenanceForDays = 4 * sqft * daysNum * (12 / 365);
+    // Maintenance for days: rate × SqFt × number of days × 12/365
+    maintenanceForDays = INVOICE1_RATE * sqft * daysNum * (12 / 365);
     
-    // Maintenance for months: 4 × SqFt × number of months
-    maintenanceForMonths = 4 * sqft * monthsNum;
+    // Maintenance for months: rate × SqFt × number of months
+    maintenanceForMonths = INVOICE1_RATE * sqft * monthsNum;
   }
   
   // Use total maintenance from CSV if calculated total doesn't match
@@ -307,6 +335,113 @@ document.getElementById('calculatorForm').addEventListener('submit', function(e)
   document.getElementById('maintenanceDaysResult').textContent = formatCurrency(maintenanceForDays);
   document.getElementById('maintenanceMonthsResult').textContent = formatCurrency(maintenanceForMonths);
   document.getElementById('totalResult').textContent = formatCurrency(finalTotal);
+
+  // Mirror maintenance breakdown into Maintenance calculation summary
+  const maintenanceDaysResultFinalEl = document.getElementById('maintenanceDaysResultFinal');
+  const maintenanceMonthsResultFinalEl = document.getElementById('maintenanceMonthsResultFinal');
+  const totalResultFinalEl = document.getElementById('totalResultFinal');
+  if (maintenanceDaysResultFinalEl) maintenanceDaysResultFinalEl.textContent = formatCurrency(maintenanceForDays);
+  if (maintenanceMonthsResultFinalEl) maintenanceMonthsResultFinalEl.textContent = formatCurrency(maintenanceForMonths);
+  if (totalResultFinalEl) totalResultFinalEl.textContent = formatCurrency(finalTotal);
+
+  // Invoice 2 (Rs. 0.5 × SqFt ...)
+  let invoice2ForDays = 0;
+  let invoice2ForMonths = 0;
+  if (sqft > 0 && daysNum > 0 && monthsNum >= 0) {
+    invoice2ForDays = INVOICE2_RATE * sqft * daysNum * (12 / 365);
+    invoice2ForMonths = INVOICE2_RATE * sqft * monthsNum;
+  }
+  const invoice2Total = invoice2ForDays + invoice2ForMonths;
+
+  const invoice2DaysLabelEl = document.getElementById('invoice2DaysLabel');
+  const invoice2MonthsLabelEl = document.getElementById('invoice2MonthsLabel');
+  if (invoice2DaysLabelEl) {
+    invoice2DaysLabelEl.textContent = `Invoice 2 for ${displayDaysNum} days (Rs. ${INVOICE2_RATE} × SqFt × Days × 12/365):`;
+  }
+  if (invoice2MonthsLabelEl) {
+    invoice2MonthsLabelEl.textContent = `Invoice 2 for ${displayMonthsNum} Months (Rs. ${INVOICE2_RATE} × SqFt × Months):`;
+  }
+
+  const invoice2DaysResultEl = document.getElementById('invoice2DaysResult');
+  const invoice2MonthsResultEl = document.getElementById('invoice2MonthsResult');
+  const invoice2TotalResultEl = document.getElementById('invoice2TotalResult');
+  if (invoice2DaysResultEl) invoice2DaysResultEl.textContent = formatCurrency(invoice2ForDays);
+  if (invoice2MonthsResultEl) invoice2MonthsResultEl.textContent = formatCurrency(invoice2ForMonths);
+  if (invoice2TotalResultEl) invoice2TotalResultEl.textContent = formatCurrency(invoice2Total);
+
+  const invoice2PayableRounded = Math.ceil(invoice2Total);
+  const invoice2RoundOff = invoice2PayableRounded - invoice2Total;
+  const invoice2RoundOffResultEl = document.getElementById('invoice2RoundOffResult');
+  const invoice2PayableResultEl = document.getElementById('invoice2PayableResult');
+  if (invoice2RoundOffResultEl) invoice2RoundOffResultEl.textContent = formatCurrency(invoice2RoundOff);
+  if (invoice2PayableResultEl) invoice2PayableResultEl.textContent = formatCurrency(invoice2PayableRounded);
+
+  // Final calculation: based on maintenance for remaining days + remaining months, per-month base + GST, then total
+  // Partial month (remaining days at Rs 4.5/sqft)
+  const finalDaysBase = sqft > 0 && daysNum > 0 ? FINAL_RATE * sqft * daysNum * (12 / 365) : 0;
+  const finalDaysGst = finalDaysBase > GST_THRESHOLD_MONTHLY ? finalDaysBase * GST_RATE : 0;
+  const finalDaysSubtotal = finalDaysBase + finalDaysGst;
+  // Each full month
+  const finalMonthBase = FINAL_RATE * sqft;
+  const finalMonthGst = finalMonthBase > GST_THRESHOLD_MONTHLY ? finalMonthBase * GST_RATE : 0;
+  const finalMonthSubtotal = finalMonthBase + finalMonthGst;
+  const fullMonthsTotal = monthsNum >= 0 ? monthsNum * finalMonthSubtotal : 0;
+  const finalGrandTotal = finalDaysSubtotal + fullMonthsTotal;
+
+  const finalPartialLabelEl = document.getElementById('finalPartialLabel');
+  const finalPartialSubtotalEl = document.getElementById('finalPartialSubtotal');
+  const finalFullMonthsLabelEl = document.getElementById('finalFullMonthsLabel');
+  const finalFullMonthsSubtotalEl = document.getElementById('finalFullMonthsSubtotal');
+  const finalGrandTotalEl = document.getElementById('finalGrandTotalResult');
+
+  if (finalPartialLabelEl) {
+    if (daysNum > 0) {
+      finalPartialLabelEl.textContent = `Partial month (${displayDaysNum} days): Base ${formatCurrency(finalDaysBase)} + GST ${formatCurrency(finalDaysGst)} =`;
+    } else {
+      finalPartialLabelEl.textContent = 'Partial month (0 days):';
+    }
+  }
+  if (finalPartialSubtotalEl) finalPartialSubtotalEl.textContent = formatCurrency(finalDaysSubtotal);
+
+  if (finalFullMonthsLabelEl) {
+    if (monthsNum > 0) {
+      finalFullMonthsLabelEl.textContent = `${displayMonthsNum} full month(s): Base ${formatCurrency(finalMonthBase)}/mo + GST ${formatCurrency(finalMonthGst)}/mo =`;
+    } else {
+      finalFullMonthsLabelEl.textContent = 'Full months (0):';
+    }
+  }
+  if (finalFullMonthsSubtotalEl) finalFullMonthsSubtotalEl.textContent = formatCurrency(fullMonthsTotal);
+  if (finalGrandTotalEl) finalGrandTotalEl.textContent = formatCurrency(finalGrandTotal);
+
+  const finalPayableRounded = Math.ceil(finalGrandTotal);
+  const finalRoundOff = finalPayableRounded - finalGrandTotal;
+  const finalRoundOffEl = document.getElementById('finalRoundOffResult');
+  const finalPayableEl = document.getElementById('finalPayableResult');
+  if (finalRoundOffEl) finalRoundOffEl.textContent = formatCurrency(finalRoundOff);
+  if (finalPayableEl) finalPayableEl.textContent = formatCurrency(finalPayableRounded);
+
+  // Invoice 2 (Invoiced) = Final calculation total - Invoice 1 total
+  const invoice1TotalSafe = Number.isFinite(finalTotal) ? finalTotal : 0;
+  const finalGrandTotalSafe = Number.isFinite(finalGrandTotal) ? finalGrandTotal : 0;
+  const invoice2InvoicedTotal = finalGrandTotalSafe - invoice1TotalSafe;
+
+  // Prefer payable-based difference (what user actually pays)
+  const invoice1PayableRounded = Math.ceil(invoice1TotalSafe);
+  // Always round up to next rupee so round off is never negative (e.g. +0.48 not -0.48)
+  const invoice2InvoicedPayableRounded = Math.ceil(invoice2InvoicedTotal);
+  const invoice2InvoicedRoundOff = invoice2InvoicedPayableRounded - invoice2InvoicedTotal;
+
+  // Populate Invoice 2 (Invoiced) breakdown
+  const invoice2MaintPayableBaseEl = document.getElementById('invoice2MaintPayableBaseResult');
+  const invoice1PayableBaseEl = document.getElementById('invoice1PayableBaseResult');
+  const invoice2InvoicedTotalEl = document.getElementById('invoice2InvoicedTotalResult');
+  const invoice2InvoicedRoundOffEl = document.getElementById('invoice2InvoicedRoundOffResult');
+  const invoice2InvoicedPayableEl = document.getElementById('invoice2InvoicedPayableResult');
+  if (invoice2MaintPayableBaseEl) invoice2MaintPayableBaseEl.textContent = formatCurrency(finalPayableRounded);
+  if (invoice1PayableBaseEl) invoice1PayableBaseEl.textContent = formatCurrency(invoice1PayableRounded);
+  if (invoice2InvoicedTotalEl) invoice2InvoicedTotalEl.textContent = formatCurrency(invoice2InvoicedTotal);
+  if (invoice2InvoicedRoundOffEl) invoice2InvoicedRoundOffEl.textContent = formatCurrency(invoice2InvoicedRoundOff);
+  if (invoice2InvoicedPayableEl) invoice2InvoicedPayableEl.textContent = formatCurrency(invoice2InvoicedPayableRounded);
   
   // Show results first
   document.getElementById('results').style.display = 'block';
@@ -323,7 +458,7 @@ document.getElementById('calculatorForm').addEventListener('submit', function(e)
     console.log('Final update - Values:', { finalDaysValue, finalMonthsValue, daysNum, monthsNum });
     
     if (finalMaintenanceDaysLabelEl) {
-const labelText = `Maintenance for ${finalDaysValue} days (Rs. 4 × SqFt × Days × 12/365):`;
+const labelText = `Maintenance for ${finalDaysValue} days (Rs. ${INVOICE1_RATE} × SqFt × Days × 12/365):`;
 finalMaintenanceDaysLabelEl.textContent = labelText;
 finalMaintenanceDaysLabelEl.innerHTML = labelText.replace(String(finalDaysValue), `<strong>${finalDaysValue}</strong>`);
 console.log('Final update - Days label set to:', finalMaintenanceDaysLabelEl.textContent);
@@ -332,12 +467,34 @@ console.error('finalMaintenanceDaysLabelEl not found in final update!');
     }
     
     if (finalMaintenanceMonthsLabelEl) {
-const labelText = `Maintenance for ${finalMonthsValue} Months (Rs. 4 × SqFt × Months):`;
+const labelText = `Maintenance for ${finalMonthsValue} Months (Rs. ${INVOICE1_RATE} × SqFt × Months):`;
 finalMaintenanceMonthsLabelEl.textContent = labelText;
 finalMaintenanceMonthsLabelEl.innerHTML = labelText.replace(String(finalMonthsValue), `<strong>${finalMonthsValue}</strong>`);
 console.log('Final update - Months label set to:', finalMaintenanceMonthsLabelEl.textContent);
     } else {
 console.error('finalMaintenanceMonthsLabelEl not found in final update!');
+    }
+
+    // Invoice 2 label emphasis (optional)
+    const finalInvoice2DaysLabelEl = document.querySelector('#invoice2DaysLabel');
+    const finalInvoice2MonthsLabelEl = document.querySelector('#invoice2MonthsLabel');
+    if (finalInvoice2DaysLabelEl) {
+      const labelText = `Invoice 2 for ${finalDaysValue} days (Rs. ${INVOICE2_RATE} × SqFt × Days × 12/365):`;
+      finalInvoice2DaysLabelEl.textContent = labelText;
+      const daysToken = `${finalDaysValue} days`;
+      finalInvoice2DaysLabelEl.innerHTML = labelText.replace(
+        daysToken,
+        `<strong>${finalDaysValue}</strong> days`
+      );
+    }
+    if (finalInvoice2MonthsLabelEl) {
+      const labelText = `Invoice 2 for ${finalMonthsValue} Months (Rs. ${INVOICE2_RATE} × SqFt × Months):`;
+      finalInvoice2MonthsLabelEl.textContent = labelText;
+      const monthsToken = `${finalMonthsValue} Months`;
+      finalInvoice2MonthsLabelEl.innerHTML = labelText.replace(
+        monthsToken,
+        `<strong>${finalMonthsValue}</strong> Months`
+      );
     }
   });
   
